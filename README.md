@@ -23,9 +23,10 @@ aula-html-astro/
 │   │   ├── tutorial/       # ChapterBody, ChapterFooter, CodeBlock, ExerciseCard
 │   │   └── ui/             # Shadcn UI components
 │   ├── content/            # Continguts dels cursos (JS objects)
-│   │   ├── css/            # 4 blocs CSS
-│   │   ├── js/             # 8 blocs JavaScript
-│   │   └── part*.js        # 7 blocs HTML
+│   │   ├── css/            # 5 blocs CSS (30 capítols)
+│   │   ├── js/             # 9 blocs JavaScript (45 capítols)
+│   │   ├── practica/       # 2 blocs Desenvolupament Pràctic (12 capítols)
+│   │   └── part*.js        # 8 blocs HTML (42 capítols)
 │   ├── layouts/
 │   │   ├── MainLayout.astro
 │   │   └── PlaygroundLayout.astro
@@ -75,7 +76,7 @@ npm run preview
 
 O amb la CLI de Vercel:
 ```bash
-npm i -g vercel
+vercel login
 vercel --prod
 ```
 
@@ -83,11 +84,12 @@ vercel --prod
 
 | Ruta | Descripció |
 |------|------------|
-| `/` | Pàgina d'inici amb els tres cursos |
-| `/html` | Índex del curs d'HTML |
-| `/css` | Índex del curs de CSS |
-| `/javascript` | Índex del curs de JavaScript |
-| `/html/capitol/[slug]` | Capítol individual |
+| `/` | Pàgina d'inici amb els 4 itineraris |
+| `/html` | Índex del curs d'HTML (42 capítols) |
+| `/css` | Índex del curs de CSS (30 capítols) |
+| `/javascript` | Índex del curs de JavaScript (45 capítols) |
+| `/practica` | Desenvolupament Pràctic i Projectes (12 capítols) |
+| `/[course]/capitol/[slug]` | Capítol individual |
 | `/playground` | Playground VS Code |
 | `/prova` | Redirigeix a `/playground` (URL legacy) |
 | `/sitemap.xml` | Sitemap XML |
