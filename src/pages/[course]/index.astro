@@ -1,0 +1,102 @@
+---
+import MainLayout from '../../layouts/MainLayout.astro';
+import { courses, getCourse } from '../../lib/tutorial.js';
+import { ChevronRight, BookOpen } from 'lucide-react';
+
+export function getStaticPaths() {
+  return courses.map((course) => ({
+    params: { course: course.slug },
+  }));
+}
+
+const { course: courseSlug } = Astro.params;
+const course = getCourse(courseSlug);
+
+if (!course) {
+  return Astro.redirect('/404');
+}
+---
+
+<MainLayout
+  title={`${course.name} | Desenvolupament Web`}
+  description={course.description}
+>
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <!-- Breadcrumb -->
+    <nav class="mb-8 flex items-center gap-1 text-sm text-muted-foreground">
+      <a href="/" class="hover:text-primary transition-colors">Cursos</a>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      <span class="text-foreground font-medium">{course.label}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="border-b border-border pb-10">
+      <span class="eyebrow">{course.label}</span>
+      <h1 class="mt-3 font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
+        {course.name}
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg leading-relaxed text-foreground/70">
+        {course.description}
+      </p>
+      <div class="mt-6 flex items-center gap-6 text-sm text-muted-foreground">
+        <span>
+          <strong class="font-mono text-foreground">{course.total}</strong> capítols
+        </span>
+        <span>
+          <strong class="font-mono text-foreground">{course.parts.length}</strong> blocs
+        </span>
+      </div>
+    </div>
+
+    <!-- Parts & Chapters -->
+    <div class="mt-10 space-y-10">
+      {course.parts.map((part) => (
+        <section>
+          <div class="mb-4 flex items-center gap-3">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 font-mono text-xs font-semibold text-primary">
+              {part.index}
+            </span>
+            <h2 class="font-heading text-xl font-semibold tracking-tight">{part.title}</h2>
+          </div>
+          {part.description && (
+            <p class="mb-4 text-sm text-muted-foreground">{part.description}</p>
+          )}
+          <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {part.chapters.map((chapter) => (
+              <a
+                href={`/${course.slug}/capitol/${chapter.slug}`}
+                class="group flex items-start gap-3 rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/40 hover:shadow-sm"
+              >
+                <span class="mt-0.5 font-mono text-xs text-muted-foreground">
+                  {chapter.number}.
+                </span>
+                <div class="flex-1 min-w-0">
+                  <span class="font-medium leading-snug text-foreground group-hover:text-primary transition-colors">
+                    {chapter.title}
+                  </span>
+                  {chapter.summary && (
+                    <p class="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                      {chapter.summary}
+                    </p>
+                  )}
+                </div>
+                <svg width="14" height="14" class="mt-1 shrink-0 text-muted-foreground group-hover:text-primary transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <!-- Start CTA -->
+    <div class="mt-12 border-t border-border pt-8">
+      <a
+        href={`/${course.slug}/capitol/${course.chapters[0].slug}`}
+        class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+      >
+        Comença per la lliçó 1 →
+      </a>
+    </div>
+  </div>
+</MainLayout>
+

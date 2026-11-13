@@ -1,0 +1,34 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Playground — Desenvolupament Web',
+  description = 'Entorn de pràctiques tipus VS Code per a HTML, CSS i JavaScript.',
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="ca" class="">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <script is:inline>
+      (function () {
+        const theme = localStorage.getItem('aula-theme') || 'light';
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      })();
+    </script>
+  </head>
+  <body data-react-root class="overflow-hidden">
+    <slot />
+  </body>
+</html>
+

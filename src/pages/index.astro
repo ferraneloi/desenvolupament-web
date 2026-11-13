@@ -1,0 +1,75 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import { courses, totalChapters } from '../lib/tutorial.js';
+import CourseCard from '../components/site/CourseCard.jsx';
+
+const totalParts = courses.reduce((sum, course) => sum + course.parts.length, 0);
+---
+
+<MainLayout
+  title="Desenvolupament Web — Tutorials i projectes en català"
+  description="Cursos en català per aprendre a construir pàgines web: HTML, CSS, JavaScript i Projectes Pràctics, amb exemples, exercicis i una zona de codi."
+>
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <section class="border-b border-border py-14 sm:py-20">
+      <p class="eyebrow">Tutorials en català · 2026</p>
+      <h1 class="mt-4 max-w-3xl font-heading text-[2.4rem] font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+        Aprèn desenvolupament web des de zero
+      </h1>
+      <p class="mt-5 max-w-2xl text-lg leading-relaxed text-foreground/70">
+        Quatre itineraris pensats per a l'alumnat: l'estructura, l'estil, el comportament d'una pàgina
+        web i projectes reals amb eines professionals (Git, VS Code, DevTools, APIs i Vercel).
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-3">
+        <a
+          href={`/html/capitol/${courses[0].chapters[0].slug}`}
+          class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Comença pel curs d'HTML →
+        </a>
+        <a
+          href="/playground"
+          class="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground/80 hover:bg-secondary"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          Playground VS Code
+        </a>
+      </div>
+
+      <div class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+        <span>
+          <strong class="font-mono text-foreground">{courses.length}</strong> cursos
+        </span>
+        <span>
+          <strong class="font-mono text-foreground">{totalChapters}</strong> capítols
+        </span>
+        <span>
+          <strong class="font-mono text-foreground">{totalParts}</strong> blocs temàtics
+        </span>
+        <span>
+          <strong class="font-mono text-foreground">0</strong> instal·lacions necessàries
+        </span>
+      </div>
+    </section>
+
+    <section class="py-12">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3">
+        <h2 class="font-heading text-2xl font-semibold tracking-tight">Tria un curs</h2>
+        <p class="text-sm text-muted-foreground">Es poden fer en qualsevol ordre</p>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {courses.map((course) => (
+          <CourseCard course={course} client:load />
+        ))}
+      </div>
+
+      <p class="mt-8 max-w-2xl text-sm leading-relaxed text-foreground/60">
+        Recomanació: comença per HTML per entendre l'estructura, continua amb CSS per donar-hi
+        forma, aprèn JavaScript per a la interactivitat i culmina amb l'itinerari de Projectes
+        Pràctics per integrar-ho tot i desplegar a producció.
+      </p>
+    </section>
+  </div>
+</MainLayout>

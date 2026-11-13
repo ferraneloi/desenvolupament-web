@@ -1,0 +1,58 @@
+---
+import MainLayout from '../../../layouts/MainLayout.astro';
+import { courses, getCourse, getChapter, getNeighbours } from '../../../lib/tutorial.js';
+import ChapterBody from '../../../components/tutorial/ChapterBody.jsx';
+import ChapterFooter from '../../../components/tutorial/ChapterFooter.jsx';
+import ChapterSidebar from '../../../components/site/ChapterSidebar.jsx';
+
+export function getStaticPaths() {
+  const paths = [];
+  for (const course of courses) {
+    for (const chapter of course.chapters) {
+      paths.push({
+        params: { course: course.slug, slug: chapter.slug },
+      });
+    }
+  }
+  return paths;
+}
+
+const { course: courseSlug, slug } = Astro.params;
+const course = getCourse(courseSlug);
+const chapter = course ? getChapter(courseSlug, slug) : null;
+
+if (!course || !chapter) {
+  return Astro.redirect('/404');
+}
+
+const { prev, next } = getNeighbours(courseSlug, slug);
+
+const pageTitle = `${chapter.title} — ${course.label} | Desenvolupament Web`;
+const pageDesc = chapter.summary || `Tutorial de ${course.label} en català.`;
+---
+
+<MainLayout title={pageTitle} description={pageDesc}>
+  <div class="mx-auto flex max-w-6xl gap-10 px-4 py-10 sm:px-6">
+    <!-- Sidebar (React Island for progress) -->
+    <ChapterSidebar course={course} activeSlug={slug} client:load />
+
+    <!-- Main content -->
+    <div class="min-w-0 flex-1 lg:max-w-[760px]">
+      <!-- Breadcrumb -->
+      <nav class="mb-6 flex items-center gap-1 text-xs text-muted-foreground">
+        <a href="/" class="hover:text-primary transition-colors">Cursos</a>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <a href={`/${course.slug}`} class="hover:text-primary transition-colors">{course.label}</a>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        <span class="truncate">{chapter.partTitle}</span>
+      </nav>
+
+      <!-- Chapter body (React Island for interactivity) -->
+      <ChapterBody chapter={chapter} client:load />
+
+      <!-- Chapter footer with progress toggle (React Island) -->
+      <ChapterFooter course={course} chapter={chapter} prev={prev} next={next} client:load />
+    </div>
+  </div>
+</MainLayout>
+

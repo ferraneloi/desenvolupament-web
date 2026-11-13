@@ -1,0 +1,12 @@
+---
+import PlaygroundLayout from '../layouts/PlaygroundLayout.astro';
+import VSCodePlayground from '../components/playground/VSCodePlayground.jsx';
+---
+
+<PlaygroundLayout
+  title="Playground — Desenvolupament Web"
+  description="Entorn de pràctiques tipus VS Code per a HTML, CSS i JavaScript en català."
+>
+  <VSCodePlayground client:only="react" />
+</PlaygroundLayout>
+
