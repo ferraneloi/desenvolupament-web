@@ -222,7 +222,7 @@ export default {
 <p title="Text que apareix en passar el ratolí">Passa el ratolí per sobre</p>
 
 <!-- Diversos atributs -->
-<img src="https://picsum.photos/id/1015/320/180" alt="Riu entre muntanyes" width="320">
+<img src="/images/picsum-1015-320x180.jpg" alt="Riu entre muntanyes" width="320">
 
 <!-- Cometes simples dins del valor -->
 <p title='Ell va dir "hola"'>Un atribut amb cometes dobles a dins</p>`,
@@ -286,7 +286,7 @@ export default {
   Documentació al MDN
 </a>
 
-<img src="https://picsum.photos/id/1025/320/180"
+<img src="/images/picsum-1025-320x180.jpg"
      alt="Un gos petit mirant a càmera"
      width="320" height="180" loading="lazy">
 

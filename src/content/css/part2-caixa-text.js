@@ -96,7 +96,7 @@ p + p { margin-top: 40px; } /* l'espai real entre els dos és 40px, no 64px */
           lang: "css",
           code: `.hero {
   background-color: #23302b;
-  background-image: url("https://picsum.photos/id/1015/1200/600");
+  background-image: url("/images/picsum-1015-1200x600.jpg");
   background-size: cover;
   background-position: center;
   height: 220px;
@@ -138,7 +138,7 @@ p + p { margin-top: 40px; } /* l'espai real entre els dos és 40px, no 64px */
           code: `.portada {
   background:
     linear-gradient(180deg, rgb(20 26 22 / 0.15), rgb(20 26 22 / 0.75)),
-    url("https://picsum.photos/id/1043/1200/500") center / cover no-repeat;
+    url("/images/picsum-1043-1200x500.jpg") center / cover no-repeat;
   color: #fff;
   padding: 32px;
   border-radius: 12px;
@@ -333,7 +333,7 @@ code, pre { font-family: "JetBrains Mono", ui-monospace, monospace; }`,
   object-fit: cover;
   object-position: center;
 }`,
-          previewHtml: `<img class="miniatura" src="https://picsum.photos/id/1025/640/360" alt="Un gos mirant a càmera">`,
+          previewHtml: `<img class="miniatura" src="/images/picsum-1025-640x360.jpg" alt="Un gos mirant a càmera">`,
         },
         {
           title: "Enquadernar amb object-fit",
@@ -361,8 +361,8 @@ code, pre { font-family: "JetBrains Mono", ui-monospace, monospace; }`,
   border-radius: 8px;
 }`,
           previewHtml: `<div class="galeria">
-  <img src="https://picsum.photos/id/1015/400/400" alt="Riu de muntanya">
-  <img src="https://picsum.photos/id/1043/400/400" alt="Bosc amb boira">
+  <img src="/images/picsum-1015-400x400.jpg" alt="Riu de muntanya">
+  <img src="/images/picsum-1043-400x400.jpg" alt="Bosc amb boira">
 </div>`,
         },
         {

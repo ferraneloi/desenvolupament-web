@@ -21,7 +21,7 @@ export default {
             <p>El navegador tria la primera font compatible: per això s'indiquen diverses etiquetes <code>&lt;source&gt;</code> amb formats diferents. Si no en troba cap, mostra el text alternatiu.</p>
           `,
           code: `<audio controls loop preload="metadata">
-  <source src="https://cdn.pixabay.com/audio/2022/03/15/audio_c8c8a73467.mp3" type="audio/mpeg">
+  <source src="/audio/audio-exemple.mp3" type="audio/mpeg">
   El teu navegador no pot reproduir aquest àudio.
 </audio>`,
         },
@@ -37,7 +37,7 @@ export default {
             <p>Com a les imatges, indica <code>width</code> i <code>height</code> per evitar salts de maquetació.</p>
           `,
           code: `<video controls width="640" height="360"
-       poster="https://picsum.photos/id/1043/640/360"
+       poster="/images/picsum-1043-640x360.jpg"
        preload="metadata">
   <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
   <source src="https://www.w3schools.com/html/mov_bbb.ogg" type="video/ogg">
@@ -57,7 +57,7 @@ export default {
   <track kind="descriptions" src="descripcions.vtt" srclang="ca">
 </video>
 
-<audio controls src="podcast.mp3" aria-label="Episodi 1 del podcast del curs"></audio>`,
+<audio controls src="/audio/podcast.mp3" aria-label="Episodi 1 del podcast del curs"></audio>`,
         },
       ],
       exercise: {

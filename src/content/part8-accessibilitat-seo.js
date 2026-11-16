@@ -281,7 +281,7 @@ export default {
   <meta property="og:title" content="Aprèn HTML des de zero | Aula HTML">
   <meta property="og:description"
     content="Tutorial d'HTML complet en català amb exemples interactius i exercicis pràctics.">
-  <meta property="og:image" content="https://desenvolupament-web.vercel.app/og-html.png">
+  <meta property="og:image" content="/images/og-html.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="ca_ES">
@@ -293,7 +293,7 @@ export default {
   <meta name="twitter:title" content="Aprèn HTML des de zero | Aula HTML">
   <meta name="twitter:description"
     content="Tutorial d'HTML complet en català amb exemples interactius.">
-  <meta name="twitter:image" content="https://desenvolupament-web.vercel.app/og-html.png">
+  <meta name="twitter:image" content="/images/og-html.png">
 </head>`,
           codeTitle: "open-graph.html",
           note: `<strong>Eina útil:</strong> Pots validar les teves meta tags OG a <a href="https://developers.facebook.com/tools/debug/" target="_blank" rel="noopener">Facebook Sharing Debugger</a> i les Twitter Cards a <a href="https://cards-dev.twitter.com/validator" target="_blank" rel="noopener">Twitter Card Validator</a>.`,
@@ -324,7 +324,7 @@ export default {
       "name": "Aula HTML",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://desenvolupament-web.vercel.app/logo.png"
+        "url": "/images/logo.png"
       }
     }
   }
@@ -427,7 +427,7 @@ Sitemap: https://desenvolupament-web.vercel.app/sitemap.xml
   &lt;link rel="canonical" href="https://labotiga.cat/productes/camera-mirrorless-24mp"&gt;
   &lt;meta property="og:type" content="product"&gt;
   &lt;meta property="og:title" content="Càmera Mirrorless 24MP"&gt;
-  &lt;meta property="og:image" content="https://labotiga.cat/img/camera.jpg"&gt;
+  &lt;meta property="og:image" content="/images/camera.jpg"&gt;
   &lt;meta property="product:price:amount" content="599"&gt;
   &lt;meta property="product:price:currency" content="EUR"&gt;
   &lt;script type="application/ld+json"&gt;

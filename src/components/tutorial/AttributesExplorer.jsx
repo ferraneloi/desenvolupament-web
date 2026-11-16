@@ -21,7 +21,7 @@ const ELEMENTS = [
     tag: "img",
     void: true,
     attrs: [
-      { name: "src", kind: "text", value: "https://picsum.photos/id/1025/240/160", defaultOn: true },
+      { name: "src", kind: "text", value: "/images/picsum-1025-240x160.jpg", defaultOn: true },
       { name: "alt", kind: "text", value: "Un gos petit mirant a càmera", defaultOn: true },
       { name: "width", kind: "choice", options: ["120", "240", "360"], value: "240" },
       { name: "loading", kind: "choice", options: ["eager", "lazy"], value: "lazy" },
@@ -100,7 +100,7 @@ export default function AttributesExplorer() {
   const element = ELEMENTS.find((item) => item.id === elementId);
   const values = state[elementId];
   const code = useMemo(() => buildCode(element, values), [element, values]);
-  const doc = `<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><style>${PREVIEW_STYLE}</style></head><body>${code}</body></html>`;
+  const doc = `<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><base href="/"><style>${PREVIEW_STYLE}</style></head><body>${code}</body></html>`;
 
   function update(name, patch) {
     setState((current) => ({

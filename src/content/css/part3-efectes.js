@@ -212,7 +212,7 @@ export default {
 }
 
 .imatge:hover { transform: scale(1.04) rotate(-1deg); }`,
-          previewHtml: `<img class="imatge" src="https://picsum.photos/id/1015/320/200" alt="Riu de muntanya" style="border-radius:10px;max-width:100%">`,
+          previewHtml: `<img class="imatge" src="/images/picsum-1015-320x200.jpg" alt="Riu de muntanya" style="border-radius:10px;max-width:100%">`,
         },
         {
           title: "Ombres, filtres i accessibilitat",
@@ -234,7 +234,7 @@ export default {
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
 }`,
-          previewHtml: `<div class="targeta"><img src="https://picsum.photos/id/1025/320/160" alt="Gos" style="max-width:100%;border-radius:8px"><p style="margin:10px 0 0">Pasa el ratolí per veure el color.</p></div>`,
+          previewHtml: `<div class="targeta"><img src="/images/picsum-1025-320x160.jpg" alt="Gos" style="max-width:100%;border-radius:8px"><p style="margin:10px 0 0">Pasa el ratolí per veure el color.</p></div>`,
         },
       ],
       exercise: {

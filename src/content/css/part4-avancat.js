@@ -69,7 +69,7 @@ img { max-width: 100%; height: auto; }
   .fitxa { grid-template-columns: 120px 1fr; align-items: center; }
 }`,
           previewHtml: `<div class="targeta-contenidor" style="border:1px solid #e5ded0;border-radius:10px;padding:12px">
-  <div class="fitxa"><img src="https://picsum.photos/id/1043/240/160" alt="Bosc" style="border-radius:8px;max-width:100%"><p style="margin:0">La imatge i el text es col·loquen en dues columnes quan hi ha espai.</p></div>
+  <div class="fitxa"><img src="/images/picsum-1043-240x160.jpg" alt="Bosc" style="border-radius:8px;max-width:100%"><p style="margin:0">La imatge i el text es col·loquen en dues columnes quan hi ha espai.</p></div>
 </div>`,
         },
       ],
@@ -285,9 +285,9 @@ li:nth-child(n + 4):not(:last-child) { opacity: 0.5; }`,
 
 .galeria img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; }`,
           previewHtml: `<div class="galeria">
-  <img src="https://picsum.photos/id/1015/400/300" alt="Riu">
-  <img src="https://picsum.photos/id/1025/400/300" alt="Gos">
-  <img src="https://picsum.photos/id/1043/400/300" alt="Bosc">
+  <img src="/images/picsum-1015-400x300.jpg" alt="Riu">
+  <img src="/images/picsum-1025-400x300.jpg" alt="Gos">
+  <img src="/images/picsum-1043-400x300.jpg" alt="Bosc">
 </div>`,
         },
       ],

@@ -219,7 +219,7 @@ export default {
             <p>Indica sempre <code>width</code> i <code>height</code>: el navegador reserva l'espai abans que la imatge arribi i el contingut no salta.</p>
           `,
           code: `<img
-  src="https://picsum.photos/id/1015/640/360"
+  src="/images/picsum-1015-640x360.jpg"
   alt="Un riu de muntanya envoltat de pedres"
   width="640"
   height="360">`,
@@ -232,7 +232,7 @@ export default {
           `,
           code: `<figure style="margin: 0; max-width: 480px;">
   <img
-    src="https://picsum.photos/id/1025/480/280"
+    src="/images/picsum-1025-480x280.jpg"
     alt="Un gos petit assegut mirant a càmera"
     width="480" height="280"
     style="border-radius: 12px; display: block; width: 100%; height: auto;">
@@ -254,9 +254,9 @@ export default {
             <p>Amb <code>loading="lazy"</code> el navegador carrega la imatge només quan està a punt d'aparèixer. Amb <code>srcset</code> pots oferir diverses mides i deixar que el navegador triï.</p>
           `,
           code: `<img
-  src="https://picsum.photos/id/1043/320/200"
-  srcset="https://picsum.photos/id/1043/320/200 320w,
-          https://picsum.photos/id/1043/640/400 640w"
+  src="/images/picsum-1043-320x200.jpg"
+  srcset="/images/picsum-1043-320x200.jpg 320w,
+          /images/picsum-1043-640x400.jpg 640w"
   sizes="(max-width: 600px) 320px, 640px"
   alt="Bosc amb boira al matí"
   width="640" height="400"

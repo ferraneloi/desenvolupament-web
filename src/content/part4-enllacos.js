@@ -188,13 +188,13 @@ export default {
           code: `<meta property="og:type" content="article">
 <meta property="og:title" content="Curs d'HTML per a alumnat">
 <meta property="og:description" content="28 capítols en català amb exemples i exercicis.">
-<meta property="og:image" content="https://exemple.cat/imatges/portada.png">
+<meta property="og:image" content="/images/portada.png">
 <meta property="og:url" content="https://exemple.cat/tutorial/html">
 <meta property="og:locale" content="ca_ES">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Curs d'HTML per a alumnat">
-<meta name="twitter:image" content="https://exemple.cat/imatges/portada.png">`,
+<meta name="twitter:image" content="/images/portada.png">`,
         },
         {
           title: "Estructura de dades i SEO tècnic",
@@ -342,12 +342,16 @@ export default {
             <p>El JavaScript s'inclou amb <code>&lt;script&gt;</code>. Pot anar escrit dins del document o en un fitxer extern amb l'atribut <code>src</code>.</p>
             <p>El codi en línia és còmode per a proves; el fitxer extern és el que has de fer servir en projectes reals, perquè es pot cachejar i reutilitzar.</p>
             <p>Un <code>&lt;script&gt;</code> sense <code>src</code> ha de tenir contingut. Un amb <code>src</code> ha d'estar buit.</p>
+            <p><strong>Atenció:</strong> <code>console.log()</code> no escriu directament a la pàgina sinó a la consola del navegador. Si prems «Resultat», veuràs la sortida capturada a la consola integrada.</p>
           `,
-          code: `<script>
+          code: `<p>Obre la consola del navegador (F12) per veure els missatges:</p>
+
+<script>
   console.log("Hola des d'un script en línia");
 </script>
 
 <script src="app.js"></script>`,
+          note: `<strong>La consola de desenvolupament:</strong> Les instruccions com <code>console.log()</code> serveixen per depurar codi i envien la informació a la consola del navegador (prem <strong>F12</strong> o <em>Ctrl+Maj+I</em> i ves a la pestanya <em>Consola</em>). A la previsualització d'aquest tutorial també te'ls capturem automàticament perquè vegis el resultat directament.`,
         },
         {
           title: "On col·locar-lo: defer i async",

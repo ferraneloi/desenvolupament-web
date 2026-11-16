@@ -11,6 +11,47 @@ const CONSOLE_STYLE =
 const PREVIEW_STYLE =
   "body{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;margin:0;padding:18px;background:#fff;color:#23302b;line-height:1.55}";
 
+const HTML_CONSOLE_HELPER = [
+  "<style>",
+  ".__console_log_box{margin:16px 0 0;padding:10px 14px;background:#1d2723;color:#f6f3ed;border-radius:8px;font:12.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace}",
+  ".__console_log_title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#b85c3a;margin-bottom:4px}",
+  ".__console_log_line{padding:2px 0;border-top:1px solid #2e3d37;word-break:break-word}",
+  ".__console_log_line::before{content:'\\203A  ';color:#d97706}",
+  "</style>",
+  "<script>",
+  "(function(){",
+  "  var origLog = console.log.bind(console);",
+  "  var origWarn = console.warn.bind(console);",
+  "  var origError = console.error.bind(console);",
+  "  function render(msg){",
+  "    var box = document.getElementById('__html_console_box__');",
+  "    if(!box){",
+  "      box = document.createElement('div');",
+  "      box.id = '__html_console_box__';",
+  "      box.className = '__console_log_box';",
+  "      box.innerHTML = '<div class=\"__console_log_title\">Sortida per consola (console.log)</div>';",
+  "      (document.body || document.documentElement).appendChild(box);",
+  "    }",
+  "    var line = document.createElement('div');",
+  "    line.className = '__console_log_line';",
+  "    line.textContent = msg;",
+  "    box.appendChild(line);",
+  "  }",
+  "  function fmt(args){",
+  "    return Array.from(args).map(function(v){",
+  "      if(typeof v==='string') return v;",
+  "      if(v===null) return 'null';",
+  "      if(v===undefined) return 'undefined';",
+  "      try{return JSON.stringify(v)}catch(e){return String(v)}",
+  "    }).join(' ');",
+  "  }",
+  "  console.log = function(){ render(fmt(arguments)); origLog.apply(console, arguments); };",
+  "  console.warn = function(){ render(fmt(arguments)); origWarn.apply(console, arguments); };",
+  "  console.error = function(){ render(fmt(arguments)); origError.apply(console, arguments); };",
+  "})();",
+  "<\/script>",
+].join("\n");
+
 function jsDoc(code) {
   return [
     '<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><style>',
@@ -45,7 +86,7 @@ function jsDoc(code) {
 function buildPreviewDoc(code, lang, previewHtml) {
   if (lang === "css") {
     return [
-      '<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><style>',
+      '<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><base href="/"><style>',
       PREVIEW_STYLE,
       code,
       "</style></head><body>",
@@ -56,16 +97,40 @@ function buildPreviewDoc(code, lang, previewHtml) {
 
   if (lang === "js") return jsDoc(code);
 
+  if (lang === "html" || !lang) {
+    let doc = code;
+    if (!/<base\b/i.test(doc)) {
+      if (/<head\b[^>]*>/i.test(doc)) {
+        doc = doc.replace(/<head\b[^>]*>/i, '$&<base href="/">');
+      } else {
+        doc = '<base href="/">' + doc;
+      }
+    }
+    if (/<script\b/i.test(doc)) {
+      if (/<head\b[^>]*>/i.test(doc)) {
+        doc = doc.replace(/<head\b[^>]*>/i, '$&' + HTML_CONSOLE_HELPER);
+      } else {
+        doc = HTML_CONSOLE_HELPER + doc;
+      }
+    }
+    return doc;
+  }
+
   return code;
 }
 
 export default function CodeBlock({ code, lang = "html", title, preview = true, previewHtml }) {
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState("css");
+
+  const hasTabs = Boolean(lang === "css" && previewHtml);
+  const currentLang = hasTabs && activeTab === "html" ? "html" : lang;
+  const currentCode = hasTabs && activeTab === "html" ? (previewHtml || "").trim() : code;
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(code);
+      await navigator.clipboard.writeText(currentCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -73,7 +138,7 @@ export default function CodeBlock({ code, lang = "html", title, preview = true, 
     }
   }
 
-  const marked = highlight(code, lang);
+  const marked = highlight(currentCode, currentLang);
   const canPreview =
     preview !== false &&
     (lang === "html" ? /<[a-zA-Z!]/.test(code) : lang === "css" ? Boolean(previewHtml) : lang === "js");
@@ -81,7 +146,30 @@ export default function CodeBlock({ code, lang = "html", title, preview = true, 
   return (
     <div className="code-card">
       <div className="code-head">
-        <span className="code-lang">{lang}</span>
+        {hasTabs ? (
+          <div className="code-tabs" role="tablist" aria-label="Llenguatge del codi">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "css"}
+              className={`code-tab ${activeTab === "css" ? "is-active" : ""}`}
+              onClick={() => setActiveTab("css")}
+            >
+              CSS
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "html"}
+              className={`code-tab ${activeTab === "html" ? "is-active" : ""}`}
+              onClick={() => setActiveTab("html")}
+            >
+              HTML
+            </button>
+          </div>
+        ) : (
+          <span className="code-lang">{lang}</span>
+        )}
         {title ? <span className="code-title">{title}</span> : null}
         <div className="code-actions">
           {canPreview ? (
