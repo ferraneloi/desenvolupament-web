@@ -29,6 +29,7 @@ export default function SiteHeader() {
             </a>
           ))}
           <a href="/playground" className={base}>Playground</a>
+          <a href="/#enllacos" className={base}>Enllaços</a>
         </nav>
 
         {/* Progress badge */}
@@ -67,6 +68,9 @@ export default function SiteHeader() {
             ))}
             <a href="/playground" className={base} onClick={() => setMobileOpen(false)}>
               Playground
+            </a>
+            <a href="/#enllacos" className={base} onClick={() => setMobileOpen(false)}>
+              Enllaços
             </a>
           </nav>
           <div className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">

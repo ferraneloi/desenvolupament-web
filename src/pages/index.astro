@@ -71,5 +71,93 @@ const totalParts = courses.reduce((sum, course) => sum + course.parts.length, 0)
         Pràctics per integrar-ho tot i desplegar a producció.
       </p>
     </section>
+
+    <!-- Secció d'enllaços d'interès / Recursos externs -->
+    <section id="enllacos" class="border-t border-border py-12">
+      <div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3">
+        <div>
+          <p class="eyebrow">Recursos externs de referència</p>
+          <h2 class="mt-1 font-heading text-2xl font-semibold tracking-tight">Enllaços d'interès</h2>
+        </div>
+        <p class="text-sm text-muted-foreground">Tutorials complementaris de GeeksforGeeks</p>
+      </div>
+
+      <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        <a
+          href="https://www.geeksforgeeks.org/html/html-tutorial/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-orange-700 dark:bg-orange-500/20 dark:text-orange-300">
+              HTML
+            </span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground group-hover:text-primary transition-colors"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </div>
+          <div>
+            <h3 class="font-heading text-lg font-semibold tracking-tight group-hover:text-primary transition-colors">
+              GeeksforGeeks HTML Tutorial
+            </h3>
+            <p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+              Guia completa d'HTML amb explicacions detallades d'etiquetes, atributs, estructures i exemples pràctics.
+            </p>
+          </div>
+          <span class="mt-auto inline-flex items-center gap-1 text-xs font-medium text-primary">
+            Visita el tutorial <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          </span>
+        </a>
+
+        <a
+          href="https://www.geeksforgeeks.org/css/css-tutorial/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-blue-700 dark:bg-blue-500/20 dark:text-blue-300">
+              CSS
+            </span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground group-hover:text-primary transition-colors"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </div>
+          <div>
+            <h3 class="font-heading text-lg font-semibold tracking-tight group-hover:text-primary transition-colors">
+              GeeksforGeeks CSS Tutorial
+            </h3>
+            <p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+              Manual exhaustiu de CSS: selectors, model de caixa, Flexbox, CSS Grid, animacions i disseny adaptable.
+            </p>
+          </div>
+          <span class="mt-auto inline-flex items-center gap-1 text-xs font-medium text-primary">
+            Visita el tutorial <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          </span>
+        </a>
+
+        <a
+          href="https://www.geeksforgeeks.org/javascript/javascript-tutorial/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="group flex flex-col gap-3 rounded-2xl border border-border bg-card p-5 transition-all hover:border-primary/40 hover:shadow-md"
+        >
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center rounded-full bg-yellow-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300">
+              JavaScript
+            </span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-muted-foreground group-hover:text-primary transition-colors"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </div>
+          <div>
+            <h3 class="font-heading text-lg font-semibold tracking-tight group-hover:text-primary transition-colors">
+              GeeksforGeeks JavaScript Tutorial
+            </h3>
+            <p class="mt-1 text-sm text-muted-foreground leading-relaxed">
+              Curs complet de JavaScript: des dels fonaments de sintaxi fins a manipulació del DOM, esdeveniments i asincronia.
+            </p>
+          </div>
+          <span class="mt-auto inline-flex items-center gap-1 text-xs font-medium text-primary">
+            Visita el tutorial <span class="transition-transform group-hover:translate-x-0.5">→</span>
+          </span>
+        </a>
+      </div>
+    </section>
   </div>
 </MainLayout>

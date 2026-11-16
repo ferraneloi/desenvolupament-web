@@ -15,6 +15,13 @@ const course = getCourse(courseSlug);
 if (!course) {
   return Astro.redirect('/404');
 }
+
+const gfgUrls = {
+  html: 'https://www.geeksforgeeks.org/html/html-tutorial/',
+  css: 'https://www.geeksforgeeks.org/css/css-tutorial/',
+  javascript: 'https://www.geeksforgeeks.org/javascript/javascript-tutorial/',
+};
+const gfgUrl = gfgUrls[course.slug];
 ---
 
 <MainLayout
@@ -88,14 +95,26 @@ if (!course) {
       ))}
     </div>
 
-    <!-- Start CTA -->
-    <div class="mt-12 border-t border-border pt-8">
+    <!-- Start CTA & External Reference -->
+    <div class="mt-12 border-t border-border pt-8 flex flex-wrap items-center justify-between gap-4">
       <a
         href={`/${course.slug}/capitol/${course.chapters[0].slug}`}
         class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
       >
         Comença per la lliçó 1 →
       </a>
+
+      {gfgUrl && (
+        <a
+          href={gfgUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+        >
+          <span>Tutorial complementari de {course.label} a GeeksforGeeks</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </a>
+      )}
     </div>
   </div>
 </MainLayout>
