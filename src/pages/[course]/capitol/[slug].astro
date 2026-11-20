@@ -28,7 +28,7 @@ if (!course || !chapter) {
 const { prev, next } = getNeighbours(courseSlug, slug);
 
 const pageTitle = `${chapter.title} — ${course.label} | Desenvolupament Web`;
-const pageDesc = chapter.summary || `Tutorial de ${course.label} en català.`;
+const pageDesc = chapter.summary || `Tutorial interactiu de ${course.label}.`;
 ---
 
 <MainLayout title={pageTitle} description={pageDesc}>
