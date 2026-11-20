@@ -1,133 +1,66 @@
-# Desenvolupament Web
+# Desenvolupament Web 🌐
 
-Plataforma educativa en català per aprendre desenvolupament web (HTML, CSS, JavaScript i Projectes Pràctics) — construïda amb **Astro 5**, **React 19** i preparada per desplegar a **Vercel** (`https://desenvolupament-web.vercel.app`).
+Benvingut/da al repositori de **Desenvolupament Web** ([desenvolupament-web.vercel.app](https://desenvolupament-web.vercel.app)).
 
-## Característiques
+Aquest projecte va néixer amb un objectiu molt clar: oferir un recurs obert, complet i en català perquè qualsevol persona o estudiant pugui aprendre a fer pàgines web des de zero, pas a pas i sense complicacions.
 
-- **4 itineraris complets** — 129 capítols d'HTML, CSS, JavaScript i Desenvolupament Pràctic
-- **Playground tipus VS Code** — editor Monaco amb múltiples fitxers, previsualització en directe i exportació ZIP
-- **Sistema de progrés** persistent amb `localStorage`
-- **Desplegament estàtic** — sense servidor, compatible amb Vercel i GitHub Pages
-- **SEO complet** — metadades, Open Graph, sitemap i robots.txt
-- **Mode clar/fosc** integrat
-- **Totalment en català**
+---
 
-## Estructura
+## Què hi trobaràs?
 
-```
-aula-html-astro/
-├── src/
-│   ├── components/
-│   │   ├── playground/     # VSCodePlayground (Monaco Editor)
-│   │   ├── site/           # SiteHeader, ChapterSidebar, CourseCard
-│   │   ├── tutorial/       # ChapterBody, ChapterFooter, CodeBlock, ExerciseCard
-│   │   └── ui/             # Shadcn UI components
-│   ├── content/            # Continguts dels cursos (JS objects)
-│   │   ├── css/            # 5 blocs CSS (30 capítols)
-│   │   ├── js/             # 9 blocs JavaScript (45 capítols)
-│   │   ├── practica/       # 2 blocs Desenvolupament Pràctic (12 capítols)
-│   │   └── part*.js        # 8 blocs HTML (42 capítols)
-│   ├── layouts/
-│   │   ├── MainLayout.astro
-│   │   └── PlaygroundLayout.astro
-│   ├── lib/
-│   │   ├── tutorial.js     # Lògica dels cursos
-│   │   ├── progress.js     # Sistema de progrés (localStorage)
-│   │   └── highlightCode.js
-│   ├── pages/
-│   │   ├── index.astro         # Pàgina d'inici
-│   │   ├── playground.astro    # Playground VS Code
-│   │   ├── [course]/
-│   │   │   ├── index.astro             # Índex del curs
-│   │   │   └── capitol/[slug].astro   # Capítol individual
-│   │   ├── sitemap.xml.js      # Sitemap dinàmic
-│   │   └── 404.astro
-│   └── styles/
-│       └── global.css
-├── astro.config.mjs
-├── tailwind.config.mjs
-├── vercel.json
-└── package.json
-```
+La plataforma està organitzada en quatre itineraris que cobreixen tot el camí bàsic del desenvolupament web modern:
 
-## Desenvolupament local
+1. **HTML** — L'esquelet del web: des de les primeres etiquetes i l'estructura semàntica fins a formularis, elements multimèdia i bones pràctiques d'accessibilitat.
+2. **CSS** — L'aspecte visual: colors, tipografies, model de caixa, Flexbox, Grid, transicions, animacions i disseny adaptable a mòbils. A les capses de codi pots alternar entre les pestanyes de CSS i HTML per veure com encaixen.
+3. **JavaScript** — La interactivitat: variables, funcions, lògica, manipulació del DOM, esdeveniments, crides asíncrones (`fetch`, APIs) i com fer que les pàgines cobrin vida.
+4. **Projectes Pràctics** — El món real: utilització d'eines que fem servir al dia a dia com Git, GitHub, VS Code, DevTools del navegador i com desplegar projectes a Vercel o GitHub Pages.
 
+A més, hi ha un **Playground interactiu** (a l'estil VS Code) integrat directament al navegador amb l'editor Monaco. Permet provar idees, escriure codi amb múltiples fitxers i veure el resultat al moment sense haver d'instal·lar cap programa.
+
+El progrés de lectura es desa automàticament al teu propi navegador (`localStorage`), de manera que pots anar marcant els capítols fets al teu ritme.
+
+---
+
+## Com arrencar el projecte en local
+
+Si vols clonar el projecte per consultar-lo, trastejar o provar canvis al teu equip:
+
+1. Assegura't de tenir **Node.js** instal·lat (recomanat Node 18 o superior).
+2. Clona el repositori i entra a la carpeta:
+   ```bash
+   git clone https://github.com/ferraneloi/desenvolupament-web.git
+   cd aula-html-astro
+   ```
+3. Instal·la les dependències:
+   ```bash
+   npm install
+   ```
+4. Engega el servidor de desenvolupament:
+   ```bash
+   npm run dev
+   ```
+   Obre [http://localhost:4321](http://localhost:4321) al navegador i ja ho tens!
+
+Per generar la versió final estàtica de producció:
 ```bash
-# Instal·lar dependències
-npm install
-
-# Servidor de desenvolupament (http://localhost:4321)
-npm run dev
-
-# Build de producció
 npm run build
-
-# Previsualitzar el build
 npm run preview
 ```
 
-## Desplegament a Vercel
+---
 
-1. Connecta el repositori a [Vercel](https://vercel.com)
-2. Framework: **Astro** (auto-detectat)
-3. Build command: `npm run build`
-4. Output directory: `dist`
-5. No cal cap variable d'entorn
+## Com està fet per dins?
 
-O amb la CLI de Vercel:
-```bash
-vercel login
-vercel --prod
-```
+El lloc està pensat perquè sigui molt ràpid i no depengui de servidors ni bases de dades externes:
 
-## URLs
+- **[Astro 5](https://astro.build/)**: S'encarrega de generar tot el contingut com a pàgines HTML estàtiques ultraràpides.
+- **[React](https://react.dev/)**: Utilitzat puntualment a les zones que requereixen interacció (el playground de codi, les capses d'exemples i la barra de progrés).
+- **[Tailwind CSS](https://tailwindcss.com/)**: Per maquetar la interfície amb un disseny net i adaptat a mode clar i fosc.
+- **Sense backend**: Totes les dades dels capítols són mòduls JavaScript locals i el progrés es guarda a la memòria del navegador.
 
-| Ruta | Descripció |
-|------|------------|
-| `/` | Pàgina d'inici amb els 4 itineraris |
-| `/html` | Índex del curs d'HTML (42 capítols) |
-| `/css` | Índex del curs de CSS (30 capítols) |
-| `/javascript` | Índex del curs de JavaScript (45 capítols) |
-| `/practica` | Desenvolupament Pràctic i Projectes (12 capítols) |
-| `/[course]/capitol/[slug]` | Capítol individual |
-| `/playground` | Playground VS Code |
-| `/prova` | Redirigeix a `/playground` (URL legacy) |
-| `/sitemap.xml` | Sitemap XML |
-| `/robots.txt` | Robots.txt |
+---
 
-## Arquitectura
+## Autor
 
-- **Astro 5** com a framework principal — generació estàtica
-- **React Islands** (`client:load` / `client:only`) per als components interactius
-- **Tailwind CSS v3** per als estils
-- **Monaco Editor** al Playground (carregat de manera dinàmica)
-- **localStorage** per al sistema de progrés (claus: `aula-progress`, `aula-playground-projects`)
-
-## Funcionalitats del Playground
-
-- Explorador de fitxers amb creació, eliminació i canvi de nom
-- Editor Monaco amb ressaltat de sintaxi per a HTML, CSS i JavaScript
-- Previsualització en directe (actualització automàtica amb debounce de 600ms)
-- Múltiples pestanyes de fitxers
-- Consola d'errors de JavaScript
-- Exportació del projecte en format ZIP
-- Persistència de projectes amb localStorage
-- Integració amb tutorials (paràmetre `?exercise=...`)
-
-## Progrés de la migració (Base44 → Astro)
-
-### ✅ Implementat
-- Tota l'estructura de rutes
-- Tots els continguts (93 capítols)
-- Sistema de progrés (localStorage)
-- Playground VS Code amb Monaco
-- SEO, sitemap, robots.txt
-- Mode clar/fosc
-- Redirect `/prova` → `/playground`
-
-### 🔜 Pendent (fases futures)
-- Autenticació i comptes d'usuari
-- Sincronització del progrés al núvol
-- Nous continguts (accessibilitat, SEO tècnic, TypeScript...)
-- Exercicis interactius amb validació
-- Tests automatitzats
+Creat per **Ferran Eloi** · Institut Caparrella (Lleida).  
+Si et serveix per aprendre o per a les teves classes, objectiu complert!
