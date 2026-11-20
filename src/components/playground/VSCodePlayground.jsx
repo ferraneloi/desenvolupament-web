@@ -210,12 +210,13 @@ function buildTree(files, folders) {
   return tree;
 }
 
-// ─── Recursive FileTree renderer ─────────────────────────────
+// ─── Recursive FileTree renderer (with drag-and-drop) ────────
 function FileTreeNode({
   node, prefix, activeFile, onSelect,
   onRename, onDelete, renaming, renameValue, setRenameValue,
   onRenameCommit, onRenameCancel, collapsed, toggleCollapse,
   onAddFile, onDeleteFolder,
+  dragItem, dropTarget, onDragStart, onDragEnd, onDragOver, onDrop,
 }) {
   const folderNames = Object.keys(node.__folders).sort();
   const files = [...node.__files].sort((a, b) => a.path.localeCompare(b.path));
@@ -225,11 +226,22 @@ function FileTreeNode({
       {folderNames.map((folderName) => {
         const folderPath = prefix ? `${prefix}/${folderName}` : folderName;
         const isOpen = !collapsed[folderPath];
+        const isDropTarget = dropTarget === folderPath;
+        // Prevent dropping a folder into itself or a descendant
+        const isSelf = dragItem?.type === "folder" &&
+          (dragItem.path === folderPath || folderPath.startsWith(dragItem.path + "/"));
         return (
           <div key={folderPath}>
             <div
-              className="group flex cursor-pointer items-center gap-1 px-2 py-0.5 hover:bg-[#2c3339]/50"
+              draggable
+              className={`group flex cursor-grab items-center gap-1 px-2 py-0.5 transition-colors
+                ${isDropTarget && !isSelf ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" : "hover:bg-[#2c3339]/50"}`}
               onClick={() => toggleCollapse(folderPath)}
+              onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "folder", folderPath); }}
+              onDragEnd={onDragEnd}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isSelf) onDragOver(folderPath); }}
+              onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget)) onDragOver(null); }}
+              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); if (!isSelf) onDrop(folderPath); }}
             >
               {isOpen
                 ? <ChevronDown size={11}  className="text-[#9aa3a0] shrink-0" />
@@ -273,56 +285,73 @@ function FileTreeNode({
                   toggleCollapse={toggleCollapse}
                   onAddFile={onAddFile}
                   onDeleteFolder={onDeleteFolder}
+                  dragItem={dragItem}
+                  dropTarget={dropTarget}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                  onDragOver={onDragOver}
+                  onDrop={onDrop}
                 />
               </div>
             )}
           </div>
         );
       })}
-      {files.map((file) => (
-        <div
-          key={file.path}
-          className={`group flex cursor-pointer items-center gap-1.5 px-3 py-0.5 ${
-            activeFile === file.path ? "bg-[#2c3339] text-white" : "hover:bg-[#2c3339]/50"
-          }`}
-          onClick={() => onSelect(file.path)}
-        >
-          {getFileIcon(file.name)}
-          {renaming === file.path ? (
-            <input
-              autoFocus
-              type="text"
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") onRenameCommit(file.path, renameValue);
-                if (e.key === "Escape") onRenameCancel();
-              }}
-              onBlur={() => onRenameCommit(file.path, renameValue)}
-              className="flex-1 rounded bg-[#2c3339] px-1 font-mono text-xs outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <span className="flex-1 font-mono text-xs truncate">{file.name}</span>
-          )}
-          <div className="hidden gap-0.5 group-hover:flex">
-            <button
-              className="rounded p-0.5 hover:bg-white/10"
-              onClick={(e) => { e.stopPropagation(); onRename(file.path); }}
-              title="Reanomena"
-            >
-              <FileText size={10} />
-            </button>
-            <button
-              className="rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
-              onClick={(e) => { e.stopPropagation(); onDelete(file.path); }}
-              title="Elimina"
-            >
-              <Trash2 size={10} />
-            </button>
+      {files.map((file) => {
+        const isDropTarget = dropTarget === ("__file__" + file.path);
+        return (
+          <div
+            key={file.path}
+            draggable
+            className={`group flex cursor-grab items-center gap-1.5 px-3 py-0.5 transition-colors ${
+              activeFile === file.path ? "bg-[#2c3339] text-white" :
+              isDropTarget ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" :
+              "hover:bg-[#2c3339]/50"
+            }`}
+            onClick={() => onSelect(file.path)}
+            onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "file", file.path); }}
+            onDragEnd={onDragEnd}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); onDragOver("__file__" + file.path); }}
+            onDragLeave={(e) => { e.stopPropagation(); onDragOver(null); }}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDrop(prefix); }}
+          >
+            {getFileIcon(file.name)}
+            {renaming === file.path ? (
+              <input
+                autoFocus
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onRenameCommit(file.path, renameValue);
+                  if (e.key === "Escape") onRenameCancel();
+                }}
+                onBlur={() => onRenameCommit(file.path, renameValue)}
+                className="flex-1 rounded bg-[#2c3339] px-1 font-mono text-xs outline-none"
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <span className="flex-1 font-mono text-xs truncate">{file.name}</span>
+            )}
+            <div className="hidden gap-0.5 group-hover:flex">
+              <button
+                className="rounded p-0.5 hover:bg-white/10"
+                onClick={(e) => { e.stopPropagation(); onRename(file.path); }}
+                title="Reanomena"
+              >
+                <FileText size={10} />
+              </button>
+              <button
+                className="rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
+                onClick={(e) => { e.stopPropagation(); onDelete(file.path); }}
+                title="Elimina"
+              >
+                <Trash2 size={10} />
+              </button>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </>
   );
 }
@@ -353,6 +382,10 @@ export default function VSCodePlayground({ initialFiles = null }) {
 
   // Folder collapse
   const [collapsed, setCollapsed]         = useState({});
+
+  // Drag-and-drop
+  const dragItem    = useRef(null);  // { type: "file"|"folder", path: string }
+  const [dropTarget, setDropTarget] = useState(null); // folder path, "__file__path", "__root__", or null
 
   const iframeRef      = useRef(null);
   const debounceRef    = useRef(null);
@@ -579,6 +612,110 @@ export default function VSCodePlayground({ initialFiles = null }) {
     setCollapsed((c) => ({ ...c, [path]: !c[path] }));
   }
 
+  // ─── Drag-and-drop handlers ──────────────────────────────────
+  function handleDragStart(e, type, path) {
+    dragItem.current = { type, path };
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", path); // needed for Firefox
+  }
+
+  function handleDragEnd() {
+    dragItem.current = null;
+    setDropTarget(null);
+  }
+
+  function handleDragOver(target) {
+    setDropTarget(target);
+  }
+
+  // targetFolder: '' = root, 'css' = inside css/, etc.
+  function handleDrop(targetFolder) {
+    setDropTarget(null);
+    const item = dragItem.current;
+    if (!item) return;
+
+    // Normalize targetFolder (strip sentinel prefix if file was drop target)
+    const dest = typeof targetFolder === "string" && targetFolder.startsWith("__file__")
+      ? folderOf(targetFolder.slice("__file__".length)).replace(/\/$/, "")
+      : (targetFolder === "__root__" ? "" : targetFolder ?? "");
+
+    if (item.type === "file") {
+      moveFile(item.path, dest);
+    } else if (item.type === "folder") {
+      moveFolder(item.path, dest);
+    }
+    dragItem.current = null;
+  }
+
+  function moveFile(oldPath, destFolder) {
+    const name = basename(oldPath);
+    const newPath = normPath(destFolder ? `${destFolder}/${name}` : name);
+    if (newPath === oldPath || files[newPath]) return; // already there or conflict
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== activeProjectId) return p;
+        const newFiles = { ...p.files };
+        newFiles[newPath] = { ...newFiles[oldPath], path: newPath, name };
+        delete newFiles[oldPath];
+        const newActive = p.activeFile === oldPath ? newPath : p.activeFile;
+        // Auto-register parent folder
+        const parentFolders = [];
+        const parts = newPath.split("/");
+        for (let i = 1; i < parts.length; i++) parentFolders.push(parts.slice(0, i).join("/"));
+        const newFolders = [...new Set([...(p.folders || []), ...parentFolders])];
+        return { ...p, files: newFiles, activeFile: newActive, folders: newFolders };
+      })
+    );
+  }
+
+  function moveFolder(oldFolderPath, destParent) {
+    // Prevent moving into self or descendant
+    if (destParent === oldFolderPath || destParent.startsWith(oldFolderPath + "/")) return;
+    const folderName = basename(oldFolderPath);
+    const newFolderPath = normPath(destParent ? `${destParent}/${folderName}` : folderName);
+    if (newFolderPath === oldFolderPath) return;
+
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== activeProjectId) return p;
+
+        // Rename files
+        const newFiles = {};
+        for (const [k, v] of Object.entries(p.files)) {
+          if (k === oldFolderPath || k.startsWith(oldFolderPath + "/")) {
+            const relativePart = k.slice(oldFolderPath.length); // includes leading /
+            const newKey = normPath(newFolderPath + relativePart);
+            newFiles[newKey] = { ...v, path: newKey, name: basename(newKey) };
+          } else {
+            newFiles[k] = v;
+          }
+        }
+
+        // Rename folder entries
+        const newFoldersList = (p.folders || []).map((f) => {
+          if (f === oldFolderPath || f.startsWith(oldFolderPath + "/")) {
+            return normPath(newFolderPath + f.slice(oldFolderPath.length));
+          }
+          return f;
+        });
+        // Add new folder path if not already there
+        if (!newFoldersList.includes(newFolderPath)) newFoldersList.push(newFolderPath);
+        // Add parent folders of newFolderPath
+        const parts = newFolderPath.split("/");
+        for (let i = 1; i < parts.length; i++) {
+          const p2 = parts.slice(0, i).join("/");
+          if (!newFoldersList.includes(p2)) newFoldersList.push(p2);
+        }
+
+        const newActive = p.activeFile?.startsWith(oldFolderPath + "/")
+          ? normPath(newFolderPath + p.activeFile.slice(oldFolderPath.length))
+          : p.activeFile;
+
+        return { ...p, files: newFiles, folders: newFoldersList, activeFile: newActive };
+      })
+    );
+  }
+
   const monacoTheme = isDark ? "vs-dark" : "vs";
   const tree = buildTree(files, folders);
 
@@ -691,7 +828,26 @@ export default function VSCodePlayground({ initialFiles = null }) {
                 toggleCollapse={toggleCollapse}
                 onAddFile={(prefix) => openAddItem("file", prefix)}
                 onDeleteFolder={deleteFolder}
+                dragItem={dragItem.current}
+                dropTarget={dropTarget}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               />
+              {/* Root drop zone (move to root) */}
+              <div
+                className={`mt-1 mx-2 h-6 rounded text-[10px] flex items-center justify-center transition-colors ${
+                  dropTarget === "__root__"
+                    ? "bg-blue-500/20 text-blue-300 outline outline-1 outline-blue-400/50"
+                    : "text-[#4a5260] hover:text-[#8a93a0]"
+                }`}
+                onDragOver={(e) => { e.preventDefault(); handleDragOver("__root__"); }}
+                onDragLeave={() => handleDragOver(null)}
+                onDrop={(e) => { e.preventDefault(); handleDrop("__root__"); }}
+              >
+                ↳ Mou a l'arrel
+              </div>
             </div>
           </aside>
         )}
