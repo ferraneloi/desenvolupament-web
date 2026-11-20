@@ -197,8 +197,8 @@ export default function AttributesExplorer() {
               {copied ? "Copiat" : "Copia"}
             </button>
           </div>
-          <pre className="code-body shell-scroll mb-3 max-h-[92px] rounded-lg">
-            <code>{code}</code>
+          <pre className="shell-scroll mb-3 max-h-[92px] overflow-x-auto rounded-lg border border-border bg-background p-3.5 font-mono text-[13px] font-medium leading-relaxed text-foreground">
+            <code className="text-foreground">{code}</code>
           </pre>
           <p className="eyebrow mb-2">Resultat</p>
           <iframe
