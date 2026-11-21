@@ -474,6 +474,7 @@ export default function VSCodePlayground({ initialFiles = null }) {
 
   // Folder collapse
   const [collapsed, setCollapsed]         = useState({});
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
 
   // Drag-and-drop
   const dragItem    = useRef(null);  // { type: "file"|"folder", path: string }
@@ -702,6 +703,15 @@ export default function VSCodePlayground({ initialFiles = null }) {
     };
     setProjects((prev) => [...prev, p]);
     setActiveProjectId(id);
+  }
+
+  function closeProject(id) {
+    if (projects.length <= 1) return; // cal mantenir almenys un projecte
+    const remaining = projects.filter((p) => p.id !== id);
+    setProjects(remaining);
+    if (activeProjectId === id) {
+      setActiveProjectId(remaining[0]?.id || "default");
+    }
   }
 
   function resetProject() {
@@ -1088,16 +1098,43 @@ export default function VSCodePlayground({ initialFiles = null }) {
         {sidebarOpen && (
           <aside className="flex w-56 flex-col border-r border-[#2f363b] bg-[#1a1f23] text-[#c9d1cd]">
             {/* Project selector */}
-            <div className="border-b border-[#2f363b] px-3 py-2">
-              <select
-                className="w-full bg-transparent font-mono text-xs text-[#c9d1cd] outline-none"
-                value={activeProjectId}
-                onChange={(e) => setActiveProjectId(e.target.value)}
+            <div className="relative border-b border-[#2f363b] px-3 py-2">
+              <button
+                className="flex w-full items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/10 font-mono text-xs text-[#c9d1cd]"
+                onClick={() => setProjectMenuOpen((v) => !v)}
+                title="Canvia de projecte"
               >
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-[#1a1f23]">{p.name}</option>
-                ))}
-              </select>
+                <span className="truncate">{project?.name || "—"}</span>
+                <ChevronDown size={12} className={`shrink-0 transition-transform ${projectMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+              {projectMenuOpen && (
+                <div
+                  className="absolute left-0 top-full z-50 w-full rounded-b border border-[#2f363b] bg-[#1e2529] shadow-xl"
+                  onMouseLeave={() => setProjectMenuOpen(false)}
+                >
+                  {projects.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`group flex items-center gap-1 px-3 py-1.5 font-mono text-xs cursor-pointer
+                        ${p.id === activeProjectId ? "bg-primary/20 text-white" : "text-[#c9d1cd] hover:bg-white/10"}`}
+                    >
+                      <span
+                        className="flex-1 truncate"
+                        onClick={() => { setActiveProjectId(p.id); setProjectMenuOpen(false); }}
+                      >{p.name}</span>
+                      {projects.length > 1 && (
+                        <button
+                          className="invisible group-hover:visible rounded p-0.5 hover:bg-red-500/30 hover:text-red-400 text-[#9aa3a0]"
+                          title={`Tanca "${p.name}"`}
+                          onClick={(e) => { e.stopPropagation(); closeProject(p.id); setProjectMenuOpen(false); }}
+                        >
+                          <X size={11} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Files header */}
