@@ -4,13 +4,71 @@ import {
   Play, RotateCcw, Download, Plus, Trash2, FileText, FileCode,
   FileCog, FolderOpen, ChevronRight, ChevronDown, Maximize2, Minimize2,
   RefreshCw, X, PanelLeftClose, PanelLeftOpen, Moon, Sun, Folder,
-  FolderPlus, Upload, Code, Columns2, Eye, Image as ImageIcon, Music
+  FolderPlus, Upload, Code, Columns2, Eye, Image as ImageIcon, Music,
+  Palette
 } from "lucide-react";
 import JSZip from "jszip";
 
 // ─── Constants ────────────────────────────────────────────────
 const STORAGE_KEY = "aula-playground-projects";
 const ACTIVE_KEY  = "aula-playground-active";
+const UI_THEME_KEY = "aula-playground-ui-theme";
+
+// ─── UI Themes ────────────────────────────────────────────────
+// Only affect the chrome (top bar, sidebar, tabs, status bar).
+// Monaco editor and preview iframe are intentionally untouched.
+const THEMES = {
+  dark: {
+    label: "VS Code",
+    // main surfaces
+    bg:          "#1a1f23",
+    bgSecondary: "#21262b",
+    bgInput:     "#2c3339",
+    bgConsole:   "#0d1117",
+    bgDropdown:  "#1e2529",
+    // borders
+    border:      "#2f363b",
+    // text
+    text:        "#c9d1cd",
+    textMuted:   "#9aa3a0",
+    textAccent:  "#9dd0b5",
+    // interactive
+    hover:       "rgba(255,255,255,0.08)",
+    activeFile:  "#2c3339",
+    activeTab:   "#1e1e1e",
+    activeText:  "#ffffff",
+    // tab active border indicator
+    tabBorder:   "#b85c3a",
+    // drop zone
+    dropBorder:  "#2f363b",
+    dropText:    "#64748b",
+  },
+  web: {
+    label: "Web",
+    // main surfaces — warm cream matching the site's --background / --secondary
+    bg:          "#f0ece2",
+    bgSecondary: "#f8f5ef",
+    bgInput:     "#e6e1d5",
+    bgConsole:   "#ede9de",
+    bgDropdown:  "#ece7dc",
+    // borders — near --border hsl(40 25% 86%)
+    border:      "#d9d3c8",
+    // text — matches --foreground / --muted-foreground
+    text:        "#222d26",
+    textMuted:   "#7a7064",
+    textAccent:  "#1f7a52",   // --accent (forest green)
+    // interactive
+    hover:       "rgba(0,0,0,0.05)",
+    activeFile:  "#e0d9cc",
+    activeTab:   "#ffffff",
+    activeText:  "#222d26",
+    // tab active border indicator
+    tabBorder:   "#b85c3a",   // same primary (terracotta)
+    // drop zone
+    dropBorder:  "#d9d3c8",
+    dropText:    "#9a9289",
+  },
+};
 
 const DEFAULT_FILES = {
   "index.html": {
@@ -283,7 +341,9 @@ function FileTreeNode({
   onRenameCommit, onRenameCancel, collapsed, toggleCollapse,
   onAddFile, onDeleteFolder,
   dragItem, dropTarget, onDragStart, onDragEnd, onDragOver, onDrop,
+  th,
 }) {
+  const T = th || { bg:"#1a1f23", bgInput:"#2c3339", border:"#2f363b", text:"#c9d1cd", textMuted:"#9aa3a0", hover:"rgba(255,255,255,0.08)", activeFile:"#2c3339" };
   const folderNames = Object.keys(node.__folders).sort();
   const files = [...node.__files].sort((a, b) => a.path.localeCompare(b.path));
 
@@ -301,7 +361,10 @@ function FileTreeNode({
             <div
               draggable
               className={`group flex cursor-grab items-center gap-1 px-2 py-0.5 transition-colors
-                ${isDropTarget && !isSelf ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" : "hover:bg-[#2c3339]/50"}`}
+                ${isDropTarget && !isSelf ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" : ""}`}
+              style={!(isDropTarget && !isSelf) ? { color: T.text } : {}}
+              onMouseEnter={e => { if (!(isDropTarget && !isSelf)) e.currentTarget.style.background = T.hover; }}
+              onMouseLeave={e => { if (!(isDropTarget && !isSelf)) e.currentTarget.style.background = "transparent"; }}
               onClick={() => toggleCollapse(folderPath)}
               onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "folder", folderPath); }}
               onDragEnd={onDragEnd}
@@ -326,15 +389,16 @@ function FileTreeNode({
               }}
             >
               {isOpen
-                ? <ChevronDown size={11}  className="text-[#9aa3a0] shrink-0" />
-                : <ChevronRight size={11} className="text-[#9aa3a0] shrink-0" />}
+                ? <ChevronDown size={11}  style={{ color: T.textMuted }} className="shrink-0" />
+                : <ChevronRight size={11} style={{ color: T.textMuted }} className="shrink-0" />}
               {isOpen
                 ? <FolderOpen size={13} className="text-yellow-300 shrink-0" />
                 : <Folder     size={13} className="text-yellow-300 shrink-0" />}
               <span className="flex-1 font-mono text-xs truncate">{folderName}</span>
               <div className="hidden gap-0.5 group-hover:flex">
                 <button
-                  className="rounded p-0.5 hover:bg-white/10"
+                  className="rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
+                  style={{ color: T.textMuted }}
                   title="Nou fitxer dins"
                   onClick={(e) => { e.stopPropagation(); onAddFile(folderPath + "/"); }}
                 >
@@ -342,6 +406,7 @@ function FileTreeNode({
                 </button>
                 <button
                   className="rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
+                  style={{ color: T.textMuted }}
                   title="Elimina carpeta"
                   onClick={(e) => { e.stopPropagation(); onDeleteFolder(folderPath); }}
                 >
@@ -350,7 +415,7 @@ function FileTreeNode({
               </div>
             </div>
             {isOpen && (
-              <div className="pl-3 border-l border-[#2f363b]/60 ml-3">
+              <div className="pl-3 ml-3 border-l" style={{ borderColor: T.border + "60" }}>
                 <FileTreeNode
                   node={node.__folders[folderName]}
                   prefix={folderPath}
@@ -373,6 +438,7 @@ function FileTreeNode({
                   onDragEnd={onDragEnd}
                   onDragOver={onDragOver}
                   onDrop={onDrop}
+                  th={th}
                 />
               </div>
             )}
@@ -381,16 +447,21 @@ function FileTreeNode({
       })}
       {files.map((file) => {
         const isDropTarget = dropTarget === ("__file__" + file.path);
+        const isActive = activeFile === file.path;
         return (
           <div
             key={file.path}
             draggable
             title={file.path}
             className={`group flex cursor-grab items-center gap-1.5 px-3 py-0.5 transition-colors ${
-              activeFile === file.path ? "bg-[#2c3339] text-white" :
-              isDropTarget ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" :
-              "hover:bg-[#2c3339]/50"
+              isDropTarget ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" : ""
             }`}
+            style={!isDropTarget ? {
+              background: isActive ? T.activeFile : "transparent",
+              color: isActive ? T.activeText : T.text,
+            } : {}}
+            onMouseEnter={e => { if (!isActive && !isDropTarget) e.currentTarget.style.background = T.hover; }}
+            onMouseLeave={e => { if (!isActive && !isDropTarget) e.currentTarget.style.background = "transparent"; }}
             onClick={() => onSelect(file.path)}
             onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "file", file.path); }}
             onDragEnd={onDragEnd}
@@ -419,7 +490,8 @@ function FileTreeNode({
                   if (e.key === "Escape") onRenameCancel();
                 }}
                 onBlur={() => onRenameCommit(file.path, renameValue)}
-                className="flex-1 rounded bg-[#2c3339] px-1 font-mono text-xs outline-none"
+                className="flex-1 rounded px-1 font-mono text-xs outline-none"
+                style={{ background: T.bgInput, color: T.text }}
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
@@ -427,7 +499,8 @@ function FileTreeNode({
             )}
             <div className="hidden gap-0.5 group-hover:flex">
               <button
-                className="rounded p-0.5 hover:bg-white/10"
+                className="rounded p-0.5 hover:bg-blue-500/20"
+                style={{ color: T.textMuted }}
                 onClick={(e) => { e.stopPropagation(); onRename(file.path); }}
                 title="Reanomena"
               >
@@ -435,6 +508,7 @@ function FileTreeNode({
               </button>
               <button
                 className="rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
+                style={{ color: T.textMuted }}
                 onClick={(e) => { e.stopPropagation(); onDelete(file.path); }}
                 title="Elimina"
               >
@@ -457,6 +531,7 @@ export default function VSCodePlayground({ initialFiles = null }) {
   const [sidebarOpen, setSidebarOpen]         = useState(true);
   const [viewMode, setViewMode]               = useState("split"); // "split" | "editor" | "preview"
   const [isDark, setIsDark]                   = useState(false);
+  const [uiTheme, setUiTheme]                 = useState(() => localStorage.getItem(UI_THEME_KEY) || "dark");
   const [previewDoc, setPreviewDoc]       = useState("");
   const [consoleMessages, setConsoleMessages] = useState([]);
   const [autoRefresh, setAutoRefresh]     = useState(true);
@@ -1019,23 +1094,49 @@ export default function VSCodePlayground({ initialFiles = null }) {
 
   const monacoTheme = isDark ? "vs-dark" : "vs";
   const tree = buildTree(files, folders);
+  const T = THEMES[uiTheme] || THEMES.dark;
+
+  function cycleUiTheme() {
+    const next = uiTheme === "dark" ? "web" : "dark";
+    setUiTheme(next);
+    localStorage.setItem(UI_THEME_KEY, next);
+  }
 
   return (
-    <div className={`flex h-screen flex-col ${isDark ? "dark" : ""}`}>
+    <div
+      className={`flex h-screen flex-col ${isDark ? "dark" : ""}`}
+      style={{ background: T.bg, color: T.text }}
+    >
       {/* Top bar */}
-      <div className="flex h-10 items-center gap-2 border-b border-[#2f363b] bg-[#1a1f23] px-3 text-[#c9d1cd]">
-        <button className="rounded p-1 hover:bg-white/10" onClick={() => setSidebarOpen((v) => !v)} title="Explorador">
+      <div
+        className="flex h-10 items-center gap-2 border-b px-3"
+        style={{ background: T.bg, borderColor: T.border, color: T.text }}
+      >
+        <button
+          className="rounded p-1 transition-colors"
+          style={{ color: T.text }}
+          onMouseEnter={e => e.currentTarget.style.background = T.hover}
+          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+          onClick={() => setSidebarOpen((v) => !v)}
+          title="Explorador"
+        >
           {sidebarOpen ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
         </button>
-        <span className="font-mono text-xs">{project?.name || "Playground"}</span>
+        <span className="font-mono text-xs" style={{ color: T.textMuted }}>{project?.name || "Playground"}</span>
 
         {/* Selector de vista: Codi | Dividit | Resultat */}
-        <div className="hidden sm:flex items-center rounded bg-[#2c3339]/70 p-0.5 text-xs text-[#9aa3a0] ml-2">
+        <div
+          className="hidden sm:flex items-center rounded p-0.5 text-xs ml-2"
+          style={{ background: T.bgInput, color: T.textMuted }}
+        >
           <button
             type="button"
             className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
-              viewMode === "editor" ? "bg-primary text-white font-medium" : "hover:text-white"
+              viewMode === "editor" ? "bg-primary text-white font-medium" : ""
             }`}
+            style={viewMode !== "editor" ? { color: T.textMuted } : {}}
+            onMouseEnter={e => { if (viewMode !== "editor") e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { if (viewMode !== "editor") e.currentTarget.style.color = T.textMuted; }}
             onClick={() => setViewMode("editor")}
             title="Maximitza la vista del codi"
           >
@@ -1044,8 +1145,11 @@ export default function VSCodePlayground({ initialFiles = null }) {
           <button
             type="button"
             className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
-              viewMode === "split" ? "bg-primary text-white font-medium" : "hover:text-white"
+              viewMode === "split" ? "bg-primary text-white font-medium" : ""
             }`}
+            style={viewMode !== "split" ? { color: T.textMuted } : {}}
+            onMouseEnter={e => { if (viewMode !== "split") e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { if (viewMode !== "split") e.currentTarget.style.color = T.textMuted; }}
             onClick={() => setViewMode("split")}
             title="Vista dividida (Codi i Resultat)"
           >
@@ -1054,8 +1158,11 @@ export default function VSCodePlayground({ initialFiles = null }) {
           <button
             type="button"
             className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
-              viewMode === "preview" ? "bg-primary text-white font-medium" : "hover:text-white"
+              viewMode === "preview" ? "bg-primary text-white font-medium" : ""
             }`}
+            style={viewMode !== "preview" ? { color: T.textMuted } : {}}
+            onMouseEnter={e => { if (viewMode !== "preview") e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { if (viewMode !== "preview") e.currentTarget.style.color = T.textMuted; }}
             onClick={() => setViewMode("preview")}
             title="Maximitza la vista prèvia"
           >
@@ -1064,7 +1171,7 @@ export default function VSCodePlayground({ initialFiles = null }) {
         </div>
 
         <div className="ml-auto flex items-center gap-1">
-          <label className="flex cursor-pointer items-center gap-1.5 text-xs">
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs" style={{ color: T.textMuted }}>
             <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} className="rounded" />
             Actualització automàtica
           </label>
@@ -1073,21 +1180,68 @@ export default function VSCodePlayground({ initialFiles = null }) {
               <Play size={11} /> Executa
             </button>
           )}
-          <button className="rounded p-1 hover:bg-white/10" onClick={() => setIsDark((d) => !d)} title="Mode clar/fosc">
+          {/* Botó tema UI (Paleta) */}
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            onClick={cycleUiTheme}
+            title={`Tema de la interfície: ${T.label} (clic per canviar)`}
+          >
+            <Palette size={15} />
+          </button>
+          {/* Botó tema editor Monaco */}
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            onClick={() => setIsDark((d) => !d)}
+            title="Mode clar/fosc de l'editor de codi"
+          >
             {isDark ? <Sun size={15} /> : <Moon size={15} />}
           </button>
           {/* Load local folder */}
-          <button className="rounded p-1 hover:bg-white/10" title="Carrega carpeta local" onClick={() => folderInputRef.current?.click()}>
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            title="Carrega carpeta local"
+            onClick={() => folderInputRef.current?.click()}
+          >
             <Upload size={15} />
           </button>
           <input ref={folderInputRef} type="file" webkitdirectory="" multiple className="hidden" onChange={handleFolderUpload} />
-          <button className="rounded p-1 hover:bg-white/10" onClick={downloadZip} title="Descarrega ZIP">
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            onClick={downloadZip}
+            title="Descarrega ZIP"
+          >
             <Download size={15} />
           </button>
-          <button className="rounded p-1 hover:bg-white/10" onClick={resetProject} title="Reinicia projecte">
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            onClick={resetProject}
+            title="Reinicia projecte"
+          >
             <RotateCcw size={15} />
           </button>
-          <button className="rounded p-1 hover:bg-white/10" onClick={newProject} title="Nou projecte">
+          <button
+            className="rounded p-1 transition-colors"
+            style={{ color: T.textMuted }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+            onClick={newProject}
+            title="Nou projecte"
+          >
             <Plus size={15} />
           </button>
         </div>
@@ -1096,11 +1250,17 @@ export default function VSCodePlayground({ initialFiles = null }) {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         {sidebarOpen && (
-          <aside className="flex w-56 flex-col border-r border-[#2f363b] bg-[#1a1f23] text-[#c9d1cd]">
+          <aside
+            className="flex w-56 flex-col border-r"
+            style={{ background: T.bg, borderColor: T.border, color: T.text }}
+          >
             {/* Project selector */}
-            <div className="relative border-b border-[#2f363b] px-3 py-2">
+            <div className="relative border-b px-3 py-2" style={{ borderColor: T.border }}>
               <button
-                className="flex w-full items-center justify-between gap-1 rounded px-1 py-0.5 hover:bg-white/10 font-mono text-xs text-[#c9d1cd]"
+                className="flex w-full items-center justify-between gap-1 rounded px-1 py-0.5 font-mono text-xs transition-colors"
+                style={{ color: T.text }}
+                onMouseEnter={e => e.currentTarget.style.background = T.hover}
+                onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                 onClick={() => setProjectMenuOpen((v) => !v)}
                 title="Canvia de projecte"
               >
@@ -1109,14 +1269,20 @@ export default function VSCodePlayground({ initialFiles = null }) {
               </button>
               {projectMenuOpen && (
                 <div
-                  className="absolute left-0 top-full z-50 w-full rounded-b border border-[#2f363b] bg-[#1e2529] shadow-xl"
+                  className="absolute left-0 top-full z-50 w-full rounded-b border shadow-xl"
+                  style={{ background: T.bgDropdown, borderColor: T.border }}
                   onMouseLeave={() => setProjectMenuOpen(false)}
                 >
                   {projects.map((p) => (
                     <div
                       key={p.id}
-                      className={`group flex items-center gap-1 px-3 py-1.5 font-mono text-xs cursor-pointer
-                        ${p.id === activeProjectId ? "bg-primary/20 text-white" : "text-[#c9d1cd] hover:bg-white/10"}`}
+                      className="group flex items-center gap-1 px-3 py-1.5 font-mono text-xs cursor-pointer transition-colors"
+                      style={{
+                        background: p.id === activeProjectId ? T.bgInput : "transparent",
+                        color: p.id === activeProjectId ? T.textAccent : T.text,
+                      }}
+                      onMouseEnter={e => { if (p.id !== activeProjectId) e.currentTarget.style.background = T.hover; }}
+                      onMouseLeave={e => { if (p.id !== activeProjectId) e.currentTarget.style.background = "transparent"; }}
                     >
                       <span
                         className="flex-1 truncate"
@@ -1124,7 +1290,8 @@ export default function VSCodePlayground({ initialFiles = null }) {
                       >{p.name}</span>
                       {projects.length > 1 && (
                         <button
-                          className="invisible group-hover:visible rounded p-0.5 hover:bg-red-500/30 hover:text-red-400 text-[#9aa3a0]"
+                          className="invisible group-hover:visible rounded p-0.5 hover:bg-red-500/30 hover:text-red-400"
+                          style={{ color: T.textMuted }}
                           title={`Tanca "${p.name}"`}
                           onClick={(e) => { e.stopPropagation(); closeProject(p.id); setProjectMenuOpen(false); }}
                         >
@@ -1139,12 +1306,26 @@ export default function VSCodePlayground({ initialFiles = null }) {
 
             {/* Files header */}
             <div className="flex items-center justify-between px-3 py-1.5">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9aa3a0]">FITXERS</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: T.textMuted }}>FITXERS</span>
               <div className="flex gap-0.5">
-                <button className="rounded p-0.5 hover:bg-white/10" onClick={() => openAddItem("file")} title="Nou fitxer">
+                <button
+                  className="rounded p-0.5 transition-colors"
+                  style={{ color: T.textMuted }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+                  onClick={() => openAddItem("file")}
+                  title="Nou fitxer"
+                >
                   <Plus size={13} />
                 </button>
-                <button className="rounded p-0.5 hover:bg-white/10" onClick={() => openAddItem("folder")} title="Nova carpeta">
+                <button
+                  className="rounded p-0.5 transition-colors"
+                  style={{ color: T.textMuted }}
+                  onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+                  onClick={() => openAddItem("folder")}
+                  title="Nova carpeta"
+                >
                   <FolderPlus size={13} />
                 </button>
               </div>
@@ -1166,7 +1347,8 @@ export default function VSCodePlayground({ initialFiles = null }) {
                     if (e.key === "Escape") setShowNewItem(false);
                   }}
                   placeholder={newItemType === "folder" ? "nova-carpeta" : (newItemTarget || "") + "fitxer.html"}
-                  className="flex-1 rounded bg-[#2c3339] px-2 py-1 font-mono text-xs outline-none"
+                  className="flex-1 rounded px-2 py-1 font-mono text-xs outline-none"
+                  style={{ background: T.bgInput, color: T.text }}
                 />
                 <button className="rounded bg-primary px-1.5 text-xs text-white" onClick={commitNewItem}>✓</button>
               </div>
@@ -1211,14 +1393,18 @@ export default function VSCodePlayground({ initialFiles = null }) {
                 onDragEnd={handleDragEnd}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
+                th={T}
               />
               {/* Root drop zone (move to root) */}
               <div
                 className={`mt-1 mx-2 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors border border-dashed ${
                   dropTarget === "__root__"
                     ? "bg-blue-500/20 text-blue-300 border-blue-400"
-                    : "border-transparent text-[#64748b] hover:text-[#9aa3a0] hover:border-[#2f363b]"
+                    : ""
                 }`}
+                style={dropTarget !== "__root__" ? { color: T.dropText, borderColor: "transparent" } : {}}
+                onMouseEnter={e => { if (dropTarget !== "__root__") { e.currentTarget.style.borderColor = T.dropBorder; e.currentTarget.style.color = T.textMuted; } }}
+                onMouseLeave={e => { if (dropTarget !== "__root__") { e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.color = T.dropText; } }}
                 onDragOver={(e) => {
                   e.preventDefault();
                   if (e.dataTransfer?.types?.includes("Files")) {
@@ -1243,7 +1429,10 @@ export default function VSCodePlayground({ initialFiles = null }) {
               viewMode === "editor" ? "flex-1" : "flex-1"
             }`}>
               {/* Tabs + Actions */}
-              <div className="flex items-center justify-between border-b border-[#2f363b] bg-[#1a1f23]">
+              <div
+                className="flex items-center justify-between border-b"
+                style={{ background: T.bg, borderColor: T.border }}
+              >
                 <div className="flex overflow-x-auto">
                   {openTabs.map((path) => {
                     const file = files[path];
@@ -1253,11 +1442,15 @@ export default function VSCodePlayground({ initialFiles = null }) {
                     return (
                       <div
                         key={path}
-                        className={`group flex shrink-0 cursor-pointer items-center gap-1.5 border-r border-[#2f363b] px-3 py-2 font-mono text-xs transition-colors ${
-                          isActive
-                            ? "bg-[#1e1e1e] text-white"
-                            : "text-[#9aa3a0] hover:bg-[#2c3339] hover:text-white"
-                        }`}
+                        className="group flex shrink-0 cursor-pointer items-center gap-1.5 border-r px-3 py-2 font-mono text-xs transition-colors"
+                        style={{
+                          borderColor: T.border,
+                          background: isActive ? T.activeTab : "transparent",
+                          color: isActive ? T.activeText : T.textMuted,
+                          borderTop: isActive ? `2px solid ${T.tabBorder}` : "2px solid transparent",
+                        }}
+                        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; } }}
+                        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; } }}
                         onClick={() => openFile(path)}
                         title={tooltipText}
                       >
@@ -1265,9 +1458,12 @@ export default function VSCodePlayground({ initialFiles = null }) {
                         <span className="truncate max-w-[130px]">{file.name}</span>
                         <button
                           type="button"
-                          className={`rounded p-0.5 transition-colors hover:bg-white/20 hover:text-white ${
+                          className={`rounded p-0.5 transition-colors ${
                             isActive ? "opacity-70 group-hover:opacity-100" : "opacity-0 group-hover:opacity-70"
                           }`}
+                          style={{ color: T.textMuted }}
+                          onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
                           onClick={(e) => closeTab(path, e)}
                           title="Tanca pestanya"
                         >
@@ -1281,7 +1477,10 @@ export default function VSCodePlayground({ initialFiles = null }) {
                 <div className="flex items-center gap-1 px-2 shrink-0">
                   {viewMode === "editor" && (
                     <button
-                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#9aa3a0] hover:bg-white/10 hover:text-white"
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors"
+                      style={{ color: T.textMuted }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
                       onClick={() => setViewMode("split")}
                       title="Obre la vista prèvia"
                     >
@@ -1290,7 +1489,10 @@ export default function VSCodePlayground({ initialFiles = null }) {
                     </button>
                   )}
                   <button
-                    className="rounded p-1 text-[#9aa3a0] hover:bg-white/10 hover:text-white"
+                    className="rounded p-1 transition-colors"
+                    style={{ color: T.textMuted }}
+                    onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
                     onClick={() => setViewMode((v) => (v === "editor" ? "split" : "editor"))}
                     title={viewMode === "editor" ? "Restaura la vista dividida" : "Maximitza la vista del codi"}
                   >
@@ -1386,11 +1588,14 @@ export default function VSCodePlayground({ initialFiles = null }) {
             <div className={`flex flex-col overflow-hidden ${
               viewMode === "preview" ? "flex-1" : "w-1/2"
             }`}>
-              <div className="flex items-center gap-2 border-b border-[#2f363b] bg-[#1a1f23] px-3 py-2 text-xs text-[#c9d1cd]">
-                <span className="font-mono uppercase tracking-wider text-[10px]">Resultat</span>
+              <div
+                className="flex items-center gap-2 border-b px-3 py-2 text-xs"
+                style={{ background: T.bg, borderColor: T.border, color: T.text }}
+              >
+                <span className="font-mono uppercase tracking-wider text-[10px]" style={{ color: T.textMuted }}>Resultat</span>
                 {autoRefresh && (
-                  <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-[#9dd0b5]">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#9dd0b5]" /> en directe
+                  <span className="ml-1 inline-flex items-center gap-1 text-[10px]" style={{ color: T.textAccent }}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: T.textAccent }} /> en directe
                   </span>
                 )}
                 {isDirty && !autoRefresh && (
@@ -1401,7 +1606,10 @@ export default function VSCodePlayground({ initialFiles = null }) {
                 <div className="ml-auto flex items-center gap-1">
                   {viewMode === "preview" && (
                     <button
-                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#9aa3a0] hover:bg-white/10 hover:text-white mr-1"
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs transition-colors mr-1"
+                      style={{ color: T.textMuted }}
+                      onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                      onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
                       onClick={() => setViewMode("split")}
                       title="Obre el codi dels fitxers"
                     >
@@ -1409,11 +1617,21 @@ export default function VSCodePlayground({ initialFiles = null }) {
                       <span className="hidden md:inline text-[11px]">Codi</span>
                     </button>
                   )}
-                  <button className="rounded p-1 hover:bg-white/10" onClick={refresh} title="Actualitza">
+                  <button
+                    className="rounded p-1 transition-colors"
+                    style={{ color: T.textMuted }}
+                    onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
+                    onClick={refresh}
+                    title="Actualitza"
+                  >
                     <RefreshCw size={13} />
                   </button>
                   <button
-                    className="rounded p-1 hover:bg-white/10"
+                    className="rounded p-1 transition-colors"
+                    style={{ color: T.textMuted }}
+                    onMouseEnter={e => { e.currentTarget.style.background = T.hover; e.currentTarget.style.color = T.text; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.textMuted; }}
                     onClick={() => setViewMode((v) => (v === "preview" ? "split" : "preview"))}
                     title={viewMode === "preview" ? "Restaura la vista dividida" : "Maximitza la vista prèvia"}
                   >
@@ -1433,18 +1651,21 @@ export default function VSCodePlayground({ initialFiles = null }) {
               </div>
 
               {consoleMessages.length > 0 && (
-                <div className="max-h-28 overflow-y-auto border-t border-[#2f363b] bg-[#0d1117]">
+                <div
+                  className="max-h-28 overflow-y-auto border-t"
+                  style={{ background: T.bgConsole, borderColor: T.border }}
+                >
                   <div className="flex items-center justify-between px-3 py-1">
-                    <span className="font-mono text-[10px] text-[#9aa3a0]">CONSOLA</span>
-                    <button className="text-[#9aa3a0] hover:text-white" onClick={() => setConsoleMessages([])}>
+                    <span className="font-mono text-[10px]" style={{ color: T.textMuted }}>CONSOLA</span>
+                    <button style={{ color: T.textMuted }} onClick={() => setConsoleMessages([])}>
                       <X size={11} />
                     </button>
                   </div>
                   {consoleMessages.map((msg, i) => (
                     <div key={i} className={`flex gap-2 px-3 py-0.5 font-mono text-[11px] ${
-                      msg.level === "error" ? "text-red-400" : msg.level === "warn" ? "text-yellow-400" : "text-[#c9d1cd]"
-                    }`}>
-                      <span className="text-[#9aa3a0]">&gt;</span>
+                      msg.level === "error" ? "text-red-400" : msg.level === "warn" ? "text-yellow-400" : ""
+                    }`} style={msg.level === "log" ? { color: T.text } : {}}>
+                      <span style={{ color: T.textMuted }}>&gt;</span>
                       <span>{msg.text}</span>
                     </div>
                   ))}
