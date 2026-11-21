@@ -32,6 +32,9 @@ const totalParts = courses.reduce((sum, course) => sum + course.parts.length, 0)
           </a>
           <a
             href="/playground"
+            id="hero-playground-btn"
+            target="_blank"
+            rel="noopener noreferrer"
             class="inline-flex items-center gap-2 rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-foreground/80 hover:bg-secondary"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
@@ -166,4 +169,15 @@ const totalParts = courses.reduce((sum, course) => sum + course.parts.length, 0)
       </div>
     </section>
   </div>
+
+  <script>
+    import { openPlaygroundPopup } from '../lib/openPlayground.js';
+    const btn = document.getElementById('hero-playground-btn');
+    if (btn) {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openPlaygroundPopup('/playground');
+      });
+    }
+  </script>
 </MainLayout>

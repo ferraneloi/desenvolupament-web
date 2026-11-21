@@ -59,6 +59,12 @@ export default function ChapterBody({ chapter }) {
                   title={section.codeTitle}
                   preview={section.preview !== false}
                   previewHtml={section.previewHtml}
+                  cssCode={section.cssCode}
+                  cssTitle={section.cssTitle}
+                  tabsOrder={section.tabsOrder}
+                  defaultTab={section.defaultTab}
+                  htmlTitle={section.htmlTitle}
+                  previewHeight={section.previewHeight}
                 />
               ) : null}
 

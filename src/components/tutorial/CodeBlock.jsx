@@ -83,8 +83,15 @@ function jsDoc(code) {
   ].join("\n");
 }
 
-function buildPreviewDoc(code, lang, previewHtml) {
+function buildPreviewDoc(code, lang, previewHtml, cssCode) {
   if (lang === "css") {
+    if (previewHtml && /<html\b[^>]*>/i.test(previewHtml)) {
+      const styleTag = `<style>\n${code}\n</style>`;
+      if (/<head\b[^>]*>/i.test(previewHtml)) {
+        return previewHtml.replace(/<head\b[^>]*>/i, `$&<base href="/">${styleTag}`);
+      }
+      return styleTag + previewHtml;
+    }
     return [
       '<!DOCTYPE html><html lang="ca"><head><meta charset="utf-8"><base href="/"><style>',
       PREVIEW_STYLE,
@@ -99,6 +106,14 @@ function buildPreviewDoc(code, lang, previewHtml) {
 
   if (lang === "html" || !lang) {
     let doc = code;
+    if (cssCode) {
+      const styleTag = `<style>\n${cssCode}\n</style>`;
+      if (/<head\b[^>]*>/i.test(doc)) {
+        doc = doc.replace(/<head\b[^>]*>/i, `$&${styleTag}`);
+      } else {
+        doc = styleTag + doc;
+      }
+    }
     if (!/<base\b/i.test(doc)) {
       if (/<head\b[^>]*>/i.test(doc)) {
         doc = doc.replace(/<head\b[^>]*>/i, '$&<base href="/">');
@@ -119,14 +134,41 @@ function buildPreviewDoc(code, lang, previewHtml) {
   return code;
 }
 
-export default function CodeBlock({ code, lang = "html", title, preview = true, previewHtml }) {
+export default function CodeBlock({
+  code,
+  lang = "html",
+  title,
+  preview = true,
+  previewHtml,
+  cssCode,
+  cssTitle,
+  tabsOrder = "css-first",
+  defaultTab,
+  htmlTitle,
+  previewHeight,
+}) {
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState("css");
 
-  const hasTabs = Boolean(lang === "css" && previewHtml);
-  const currentLang = hasTabs && activeTab === "html" ? "html" : lang;
-  const currentCode = hasTabs && activeTab === "html" ? (previewHtml || "").trim() : code;
+  const hasTabs = Boolean((lang === "css" && previewHtml) || (lang === "html" && cssCode));
+  const initialTab = defaultTab || (tabsOrder === "html-first" ? "html" : lang === "css" ? "css" : "html");
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  let currentLang = lang;
+  let currentCode = code;
+  let currentTitle = title;
+
+  if (hasTabs) {
+    if (activeTab === "html") {
+      currentLang = "html";
+      currentCode = (lang === "html" ? code : previewHtml || "").trim();
+      currentTitle = htmlTitle || (lang === "html" ? title : "index.html") || "index.html";
+    } else {
+      currentLang = "css";
+      currentCode = (lang === "css" ? code : cssCode || "").trim();
+      currentTitle = cssTitle || (lang === "css" ? title : "styles.css") || "styles.css";
+    }
+  }
 
   async function copy() {
     try {
@@ -148,29 +190,54 @@ export default function CodeBlock({ code, lang = "html", title, preview = true, 
       <div className="code-head">
         {hasTabs ? (
           <div className="code-tabs" role="tablist" aria-label="Llenguatge del codi">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "css"}
-              className={`code-tab ${activeTab === "css" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("css")}
-            >
-              CSS
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "html"}
-              className={`code-tab ${activeTab === "html" ? "is-active" : ""}`}
-              onClick={() => setActiveTab("html")}
-            >
-              HTML
-            </button>
+            {tabsOrder === "html-first" ? (
+              <>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "html"}
+                  className={`code-tab ${activeTab === "html" ? "is-active" : ""}`}
+                  onClick={() => setActiveTab("html")}
+                >
+                  HTML
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "css"}
+                  className={`code-tab ${activeTab === "css" ? "is-active" : ""}`}
+                  onClick={() => setActiveTab("css")}
+                >
+                  CSS
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "css"}
+                  className={`code-tab ${activeTab === "css" ? "is-active" : ""}`}
+                  onClick={() => setActiveTab("css")}
+                >
+                  CSS
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "html"}
+                  className={`code-tab ${activeTab === "html" ? "is-active" : ""}`}
+                  onClick={() => setActiveTab("html")}
+                >
+                  HTML
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <span className="code-lang">{lang}</span>
         )}
-        {title ? <span className="code-title">{title}</span> : null}
+        {currentTitle ? <span className="code-title">{currentTitle}</span> : null}
         <div className="code-actions">
           {canPreview ? (
             <button
@@ -198,9 +265,10 @@ export default function CodeBlock({ code, lang = "html", title, preview = true, 
       {showPreview ? (
         <iframe
           className="code-preview"
+          style={previewHeight ? { height: previewHeight } : undefined}
           title="Resultat de l'exemple"
           sandbox="allow-scripts allow-forms allow-popups"
-          srcDoc={buildPreviewDoc(code, lang, previewHtml)}
+          srcDoc={buildPreviewDoc(code, lang, previewHtml, cssCode)}
         />
       ) : null}
     </div>

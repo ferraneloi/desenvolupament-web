@@ -2,6 +2,7 @@ import { courses, totalChapters } from "../../lib/tutorial.js";
 import { useTotalProgress } from "../../lib/progress.js";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { openPlaygroundPopup } from "../../lib/openPlayground.js";
 
 export default function SiteHeader() {
   const done = useTotalProgress();
@@ -28,7 +29,18 @@ export default function SiteHeader() {
               {course.label}
             </a>
           ))}
-          <a href="/playground" className={base}>Playground</a>
+          <a
+            href="/playground"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={base}
+            onClick={(e) => {
+              e.preventDefault();
+              openPlaygroundPopup("/playground");
+            }}
+          >
+            Playground
+          </a>
           <a href="/#enllacos" className={base}>Enllaços</a>
         </nav>
 
@@ -66,7 +78,17 @@ export default function SiteHeader() {
                 {course.label}
               </a>
             ))}
-            <a href="/playground" className={base} onClick={() => setMobileOpen(false)}>
+            <a
+              href="/playground"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={base}
+              onClick={(e) => {
+                e.preventDefault();
+                setMobileOpen(false);
+                openPlaygroundPopup("/playground");
+              }}
+            >
               Playground
             </a>
             <a href="/#enllacos" className={base} onClick={() => setMobileOpen(false)}>

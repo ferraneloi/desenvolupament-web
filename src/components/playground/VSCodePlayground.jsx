@@ -4,7 +4,7 @@ import {
   Play, RotateCcw, Download, Plus, Trash2, FileText, FileCode,
   FileCog, FolderOpen, ChevronRight, ChevronDown, Maximize2, Minimize2,
   RefreshCw, X, PanelLeftClose, PanelLeftOpen, Moon, Sun, Folder,
-  FolderPlus, Upload
+  FolderPlus, Upload, Code, Columns2, Eye, Image as ImageIcon, Music
 } from "lucide-react";
 import JSZip from "jszip";
 
@@ -84,9 +84,17 @@ const DEFAULT_PROJECT = {
 
 // ─── Helpers ──────────────────────────────────────────────────
 function getFileIcon(name) {
-  if (name.endsWith(".html")) return <FileText size={14} className="text-orange-400 shrink-0" />;
-  if (name.endsWith(".css"))  return <FileCog size={14}  className="text-blue-400 shrink-0" />;
-  if (name.endsWith(".js"))   return <FileCode size={14} className="text-yellow-400 shrink-0" />;
+  const lower = name.toLowerCase();
+  if (lower.endsWith(".html")) return <FileText size={14} className="text-orange-400 shrink-0" />;
+  if (lower.endsWith(".css"))  return <FileCog size={14}  className="text-blue-400 shrink-0" />;
+  if (lower.endsWith(".js"))   return <FileCode size={14} className="text-yellow-400 shrink-0" />;
+  if (lower.endsWith(".json")) return <FileCode size={14} className="text-green-400 shrink-0" />;
+  if (/\.(png|jpg|jpeg|gif|webp|svg|ico|bmp|avif)$/i.test(lower)) {
+    return <ImageIcon size={14} className="text-emerald-400 shrink-0" />;
+  }
+  if (/\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(lower)) {
+    return <Music size={14} className="text-purple-400 shrink-0" />;
+  }
   return <FileText size={14} className="text-gray-400 shrink-0" />;
 }
 
@@ -98,6 +106,38 @@ function getLanguage(filename) {
   return "plaintext";
 }
 
+function isBinaryFile(filename, mimeType = "") {
+  const ext = filename.split(".").pop().toLowerCase();
+  const binaryExts = [
+    "png", "jpg", "jpeg", "gif", "webp", "ico", "bmp", "avif",
+    "mp3", "wav", "ogg", "m4a", "aac", "flac",
+    "mp4", "webm", "ogv",
+    "pdf", "woff", "woff2", "ttf", "eot", "zip"
+  ];
+  if (binaryExts.includes(ext)) return true;
+  if (mimeType.startsWith("image/") && ext !== "svg") return true;
+  if (mimeType.startsWith("audio/") || mimeType.startsWith("video/")) return true;
+  return false;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
 function normPath(p) { return p.replace(/\\/g, "/").replace(/^\/+/, ""); }
 function folderOf(path) { const i = path.lastIndexOf("/"); return i === -1 ? "" : path.slice(0, i + 1); }
 function basename(path) { return path.split("/").pop(); }
@@ -107,13 +147,31 @@ function buildPreview(files) {
   // Create Blob URLs for every file
   const blobMap = {};
   for (const [path, file] of Object.entries(files)) {
-    const mime =
-      path.endsWith(".html") ? "text/html; charset=utf-8" :
-      path.endsWith(".css")  ? "text/css; charset=utf-8"  :
-      path.endsWith(".js")   ? "text/javascript; charset=utf-8" :
-      "text/plain; charset=utf-8";
-    const blob = new Blob([file.content], { type: mime });
-    blobMap[path] = URL.createObjectURL(blob);
+    if (file.isBinary && file.dataUrl) {
+      try {
+        const [header, base64] = file.dataUrl.split(",");
+        const mime = header.match(/:(.*?);/)?.[1] || "application/octet-stream";
+        const byteCharacters = atob(base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mime });
+        blobMap[path] = URL.createObjectURL(blob);
+      } catch {
+        blobMap[path] = file.dataUrl;
+      }
+    } else {
+      const mime =
+        path.endsWith(".html") ? "text/html; charset=utf-8" :
+        path.endsWith(".css")  ? "text/css; charset=utf-8"  :
+        path.endsWith(".js")   ? "text/javascript; charset=utf-8" :
+        path.endsWith(".svg")  ? "image/svg+xml; charset=utf-8" :
+        "text/plain; charset=utf-8";
+      const blob = new Blob([file.content || ""], { type: mime });
+      blobMap[path] = URL.createObjectURL(blob);
+    }
   }
 
   let doc = files["index.html"]?.content || "<p>Cap fitxer index.html</p>";
@@ -239,9 +297,25 @@ function FileTreeNode({
               onClick={() => toggleCollapse(folderPath)}
               onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "folder", folderPath); }}
               onDragEnd={onDragEnd}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isSelf) onDragOver(folderPath); }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer?.types?.includes("Files")) {
+                  e.dataTransfer.dropEffect = "copy";
+                  onDragOver(folderPath);
+                } else if (!isSelf) {
+                  e.dataTransfer.dropEffect = "move";
+                  onDragOver(folderPath);
+                }
+              }}
               onDragLeave={(e) => { e.stopPropagation(); if (!e.currentTarget.contains(e.relatedTarget)) onDragOver(null); }}
-              onDrop={(e) => { e.preventDefault(); e.stopPropagation(); if (!isSelf) onDrop(folderPath); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.dataTransfer?.files?.length > 0 || !isSelf) {
+                  onDrop(e, folderPath);
+                }
+              }}
             >
               {isOpen
                 ? <ChevronDown size={11}  className="text-[#9aa3a0] shrink-0" />
@@ -311,9 +385,18 @@ function FileTreeNode({
             onClick={() => onSelect(file.path)}
             onDragStart={(e) => { e.stopPropagation(); onDragStart(e, "file", file.path); }}
             onDragEnd={onDragEnd}
-            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); onDragOver("__file__" + file.path); }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer?.types?.includes("Files")) {
+                e.dataTransfer.dropEffect = "copy";
+              } else {
+                e.dataTransfer.dropEffect = "move";
+              }
+              onDragOver("__file__" + file.path);
+            }}
             onDragLeave={(e) => { e.stopPropagation(); onDragOver(null); }}
-            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDrop(prefix); }}
+            onDrop={(e) => { e.preventDefault(); e.stopPropagation(); onDrop(e, prefix); }}
           >
             {getFileIcon(file.name)}
             {renaming === file.path ? (
@@ -363,8 +446,8 @@ export default function VSCodePlayground({ initialFiles = null }) {
     () => localStorage.getItem(ACTIVE_KEY) || "default"
   );
   const [sidebarOpen, setSidebarOpen]         = useState(true);
-  const [previewFullscreen, setPreviewFullscreen] = useState(false);
-  const [isDark, setIsDark]               = useState(false);
+  const [viewMode, setViewMode]               = useState("split"); // "split" | "editor" | "preview"
+  const [isDark, setIsDark]                   = useState(false);
   const [previewDoc, setPreviewDoc]       = useState("");
   const [consoleMessages, setConsoleMessages] = useState([]);
   const [autoRefresh, setAutoRefresh]     = useState(true);
@@ -575,9 +658,27 @@ export default function VSCodePlayground({ initialFiles = null }) {
     const newFolders = new Set();
     for (const f of inputFiles) {
       const relativePath = normPath(f.webkitRelativePath || f.name);
-      let text = "";
-      try { text = await f.text(); } catch {}
-      newFiles[relativePath] = { name: basename(relativePath), path: relativePath, language: getLanguage(relativePath), content: text };
+      const isBin = isBinaryFile(f.name, f.type);
+      let content = "";
+      let dataUrl = "";
+      if (isBin) {
+        try {
+          dataUrl = await readFileAsDataUrl(f);
+          content = dataUrl;
+        } catch {}
+      } else {
+        try {
+          content = await readFileAsText(f);
+        } catch {}
+      }
+      newFiles[relativePath] = {
+        name: basename(relativePath),
+        path: relativePath,
+        language: getLanguage(relativePath),
+        content,
+        isBinary: isBin,
+        dataUrl: isBin ? dataUrl : undefined,
+      };
       const parts = relativePath.split("/");
       for (let i = 1; i < parts.length; i++) newFolders.add(parts.slice(0, i).join("/"));
     }
@@ -597,7 +698,16 @@ export default function VSCodePlayground({ initialFiles = null }) {
   async function downloadZip() {
     const zip = new JSZip();
     for (const [path, file] of Object.entries(files)) {
-      zip.file(path, file.content);
+      if (file.isBinary && file.dataUrl) {
+        const base64Data = file.dataUrl.split(",")[1];
+        if (base64Data) {
+          zip.file(path, base64Data, { base64: true });
+        } else {
+          zip.file(path, file.content || "");
+        }
+      } else {
+        zip.file(path, file.content || "");
+      }
     }
     const blob = await zip.generateAsync({ type: "blob" });
     const url  = URL.createObjectURL(blob);
@@ -628,9 +738,101 @@ export default function VSCodePlayground({ initialFiles = null }) {
     setDropTarget(target);
   }
 
+  async function handleExternalFilesDrop(fileList, targetFolder) {
+    const rawFiles = Array.from(fileList || []);
+    if (!rawFiles.length) return;
+
+    // Normalize dest
+    const dest = typeof targetFolder === "string" && targetFolder.startsWith("__file__")
+      ? folderOf(targetFolder.slice("__file__".length)).replace(/\/$/, "")
+      : (targetFolder === "__root__" ? "" : targetFolder ?? "");
+
+    const newEntries = {};
+    let lastActive = null;
+
+    for (const f of rawFiles) {
+      const name = f.name;
+      const targetPath = normPath(dest ? `${dest}/${name}` : name);
+      const isBin = isBinaryFile(name, f.type);
+      let content = "";
+      let dataUrl = "";
+
+      if (isBin) {
+        try {
+          dataUrl = await readFileAsDataUrl(f);
+          content = dataUrl;
+        } catch (err) {
+          console.error("Error llegint fitxer binari:", err);
+          continue;
+        }
+      } else {
+        try {
+          content = await readFileAsText(f);
+        } catch {
+          content = "";
+        }
+      }
+
+      newEntries[targetPath] = {
+        name,
+        path: targetPath,
+        language: getLanguage(name),
+        content,
+        isBinary: isBin,
+        dataUrl: isBin ? dataUrl : undefined,
+        mimeType: f.type || undefined,
+        size: f.size || undefined,
+      };
+      lastActive = targetPath;
+    }
+
+    if (!Object.keys(newEntries).length) return;
+
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== activeProjectId) return p;
+        const updatedFiles = { ...p.files, ...newEntries };
+
+        const parentFolders = [];
+        for (const filePath of Object.keys(newEntries)) {
+          const parts = filePath.split("/");
+          for (let i = 1; i < parts.length; i++) {
+            parentFolders.push(parts.slice(0, i).join("/"));
+          }
+        }
+        const updatedFolders = [...new Set([...(p.folders || []), ...parentFolders])];
+
+        return {
+          ...p,
+          files: updatedFiles,
+          folders: updatedFolders,
+          activeFile: lastActive || p.activeFile,
+        };
+      })
+    );
+
+    // Obrir la carpeta de destí per mostrar els nous fitxers
+    if (dest) {
+      const parts = dest.split("/");
+      const toOpen = {};
+      for (let i = 1; i <= parts.length; i++) {
+        toOpen[parts.slice(0, i).join("/")] = false;
+      }
+      setCollapsed((c) => ({ ...c, ...toOpen }));
+    }
+  }
+
   // targetFolder: '' = root, 'css' = inside css/, etc.
-  function handleDrop(targetFolder) {
+  function handleDrop(e, targetFolder) {
     setDropTarget(null);
+
+    // 1. Fitxers externs del sistema operatiu (imatges, àudios, documents)
+    if (e?.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      handleExternalFilesDrop(e.dataTransfer.files, targetFolder);
+      return;
+    }
+
+    // 2. Arrossegament intern de fitxers o carpetes del playground
     const item = dragItem.current;
     if (!item) return;
 
@@ -728,6 +930,40 @@ export default function VSCodePlayground({ initialFiles = null }) {
         </button>
         <span className="font-mono text-xs">{project?.name || "Playground"}</span>
 
+        {/* Selector de vista: Codi | Dividit | Resultat */}
+        <div className="hidden sm:flex items-center rounded bg-[#2c3339]/70 p-0.5 text-xs text-[#9aa3a0] ml-2">
+          <button
+            type="button"
+            className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
+              viewMode === "editor" ? "bg-primary text-white font-medium" : "hover:text-white"
+            }`}
+            onClick={() => setViewMode("editor")}
+            title="Maximitza la vista del codi"
+          >
+            <Code size={12} /> Codi
+          </button>
+          <button
+            type="button"
+            className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
+              viewMode === "split" ? "bg-primary text-white font-medium" : "hover:text-white"
+            }`}
+            onClick={() => setViewMode("split")}
+            title="Vista dividida (Codi i Resultat)"
+          >
+            <Columns2 size={12} /> Dividit
+          </button>
+          <button
+            type="button"
+            className={`flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono transition-colors ${
+              viewMode === "preview" ? "bg-primary text-white font-medium" : "hover:text-white"
+            }`}
+            onClick={() => setViewMode("preview")}
+            title="Maximitza la vista prèvia"
+          >
+            <Eye size={12} /> Resultat
+          </button>
+        </div>
+
         <div className="ml-auto flex items-center gap-1">
           <label className="flex cursor-pointer items-center gap-1.5 text-xs">
             <input type="checkbox" checked={autoRefresh} onChange={(e) => setAutoRefresh(e.target.checked)} className="rounded" />
@@ -811,7 +1047,22 @@ export default function VSCodePlayground({ initialFiles = null }) {
             )}
 
             {/* File tree */}
-            <div className="flex-1 overflow-y-auto py-1">
+            <div
+              className="flex-1 overflow-y-auto py-1"
+              onDragOver={(e) => {
+                if (e.dataTransfer?.types?.includes("Files")) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                  if (!dropTarget) handleDragOver("__root__");
+                }
+              }}
+              onDrop={(e) => {
+                if (e.dataTransfer?.files?.length > 0 && (!dropTarget || dropTarget === "__root__")) {
+                  e.preventDefault();
+                  handleDrop(e, "__root__");
+                }
+              }}
+            >
               <FileTreeNode
                 node={tree}
                 prefix=""
@@ -837,124 +1088,219 @@ export default function VSCodePlayground({ initialFiles = null }) {
               />
               {/* Root drop zone (move to root) */}
               <div
-                className={`mt-1 mx-2 h-6 rounded text-[10px] flex items-center justify-center transition-colors ${
+                className={`mt-1 mx-2 h-7 rounded text-[11px] font-mono flex items-center justify-center transition-colors border border-dashed ${
                   dropTarget === "__root__"
-                    ? "bg-blue-500/20 text-blue-300 outline outline-1 outline-blue-400/50"
-                    : "text-[#4a5260] hover:text-[#8a93a0]"
+                    ? "bg-blue-500/20 text-blue-300 border-blue-400"
+                    : "border-transparent text-[#64748b] hover:text-[#9aa3a0] hover:border-[#2f363b]"
                 }`}
-                onDragOver={(e) => { e.preventDefault(); handleDragOver("__root__"); }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer?.types?.includes("Files")) {
+                    e.dataTransfer.dropEffect = "copy";
+                  }
+                  handleDragOver("__root__");
+                }}
                 onDragLeave={() => handleDragOver(null)}
-                onDrop={(e) => { e.preventDefault(); handleDrop("__root__"); }}
+                onDrop={(e) => { e.preventDefault(); handleDrop(e, "__root__"); }}
               >
-                ↳ Mou a l'arrel
+                ↳ Deixa anar a l'arrel
               </div>
             </div>
           </aside>
         )}
 
         {/* Editor + Preview */}
-        <div className={`flex flex-1 overflow-hidden ${previewFullscreen ? "flex-col" : ""}`}>
+        <div className="flex flex-1 overflow-hidden">
           {/* Editor */}
-          {!previewFullscreen && (
-            <div className="flex flex-1 flex-col overflow-hidden border-r border-[#2f363b]">
-              {/* Tabs */}
-              <div className="flex overflow-x-auto border-b border-[#2f363b] bg-[#1a1f23]">
-                {Object.values(files).map((file) => (
+          {viewMode !== "preview" && (
+            <div className={`flex flex-col overflow-hidden border-r border-[#2f363b] ${
+              viewMode === "editor" ? "flex-1" : "flex-1"
+            }`}>
+              {/* Tabs + Actions */}
+              <div className="flex items-center justify-between border-b border-[#2f363b] bg-[#1a1f23]">
+                <div className="flex overflow-x-auto">
+                  {Object.values(files).map((file) => (
+                    <button
+                      key={file.path}
+                      className={`flex shrink-0 items-center gap-1.5 border-r border-[#2f363b] px-3 py-2 font-mono text-xs transition-colors ${
+                        activeFile === file.path
+                          ? "bg-[#1e1e1e] text-white"
+                          : "text-[#9aa3a0] hover:bg-[#2c3339] hover:text-white"
+                      }`}
+                      onClick={() => setActiveFile(file.path)}
+                    >
+                      {getFileIcon(file.name)}
+                      {file.name}
+                    </button>
+                  ))}
+                </div>
+                {/* Editor actions: Maximitzar / Restaurar / Obrir preview */}
+                <div className="flex items-center gap-1 px-2 shrink-0">
+                  {viewMode === "editor" && (
+                    <button
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#9aa3a0] hover:bg-white/10 hover:text-white"
+                      onClick={() => setViewMode("split")}
+                      title="Obre la vista prèvia"
+                    >
+                      <Eye size={13} />
+                      <span className="hidden md:inline text-[11px]">Resultat</span>
+                    </button>
+                  )}
                   <button
-                    key={file.path}
-                    className={`flex shrink-0 items-center gap-1.5 border-r border-[#2f363b] px-3 py-2 font-mono text-xs transition-colors ${
-                      activeFile === file.path
-                        ? "bg-[#1e1e1e] text-white"
-                        : "text-[#9aa3a0] hover:bg-[#2c3339] hover:text-white"
-                    }`}
-                    onClick={() => setActiveFile(file.path)}
+                    className="rounded p-1 text-[#9aa3a0] hover:bg-white/10 hover:text-white"
+                    onClick={() => setViewMode((v) => (v === "editor" ? "split" : "editor"))}
+                    title={viewMode === "editor" ? "Restaura la vista dividida" : "Maximitza la vista del codi"}
                   >
-                    {getFileIcon(file.name)}
-                    {file.name}
+                    {viewMode === "editor" ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                   </button>
-                ))}
+                </div>
               </div>
 
-              {/* Monaco */}
-              <div className="flex-1">
+              {/* Monaco o Visualitzador Multimèdia */}
+              <div className="flex-1 overflow-auto bg-[#1e1e1e]">
                 {currentFile && (
-                  <Editor
-                    height="100%"
-                    language={currentFile.language}
-                    value={currentFile.content}
-                    theme={monacoTheme}
-                    onChange={(value) => updateFile(activeFile, value ?? "")}
-                    options={{
-                      fontSize: 13, lineHeight: 1.65,
-                      fontFamily: "'JetBrains Mono', 'Cascadia Code', Consolas, monospace",
-                      minimap: { enabled: false },
-                      scrollBeyondLastLine: false,
-                      wordWrap: "on", tabSize: 2,
-                      automaticLayout: true,
-                      bracketPairColorization: { enabled: true },
-                      formatOnPaste: true,
-                      suggest: { showKeywords: true },
-                    }}
-                  />
+                  currentFile.isBinary ? (
+                    <div className="flex h-full flex-col items-center justify-center p-6 text-center text-[#c9d1cd]">
+                      {/\.(png|jpg|jpeg|gif|webp|svg|ico|bmp|avif)$/i.test(currentFile.name) ? (
+                        <div className="flex flex-col items-center gap-4 max-w-lg">
+                          <div className="rounded-lg border border-[#2f363b] p-2 bg-[#14181b] shadow-lg max-h-[60vh] max-w-full overflow-hidden flex items-center justify-center">
+                            <img
+                              src={currentFile.dataUrl || currentFile.content}
+                              alt={currentFile.name}
+                              className="max-h-[55vh] max-w-full object-contain rounded"
+                            />
+                          </div>
+                          <div className="font-mono text-xs text-[#9aa3a0]">
+                            <span className="font-semibold text-white">{currentFile.name}</span>
+                            <span className="mx-2">•</span>
+                            <span>{currentFile.path}</span>
+                          </div>
+                          <p className="text-xs text-[#64748b]">
+                            Imatge integrada al projecte. Utilitza-la a l'HTML amb <code className="text-[#9dd0b5]">&lt;img src="{currentFile.path}" alt="{currentFile.name}"&gt;</code>.
+                          </p>
+                        </div>
+                      ) : /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(currentFile.name) ? (
+                        <div className="flex flex-col items-center gap-4 max-w-md p-6 rounded-xl border border-[#2f363b] bg-[#14181b] shadow-lg">
+                          <div className="grid h-16 w-16 place-items-center rounded-2xl bg-purple-500/20 text-purple-300">
+                            <Music size={32} />
+                          </div>
+                          <div className="font-mono text-xs">
+                            <div className="font-semibold text-white text-sm">{currentFile.name}</div>
+                            <div className="text-[#9aa3a0] mt-1">{currentFile.path}</div>
+                          </div>
+                          <audio
+                            controls
+                            src={currentFile.dataUrl || currentFile.content}
+                            className="w-full mt-2"
+                          />
+                          <p className="text-xs text-[#64748b]">
+                            Àudio integrat al projecte. Reprodueix-lo a l'HTML amb <code className="text-[#9dd0b5]">&lt;audio src="{currentFile.path}" controls&gt;&lt;/audio&gt;</code>.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <FileText size={48} className="text-[#9aa3a0]" />
+                          <span className="font-mono text-sm">{currentFile.name}</span>
+                          <span className="text-xs text-[#9aa3a0]">Fitxer binari ({currentFile.path})</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Editor
+                      height="100%"
+                      language={currentFile.language}
+                      value={currentFile.content}
+                      theme={monacoTheme}
+                      onChange={(value) => updateFile(activeFile, value ?? "")}
+                      options={{
+                        fontSize: 13, lineHeight: 1.65,
+                        fontFamily: "'JetBrains Mono', 'Cascadia Code', Consolas, monospace",
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        wordWrap: "on", tabSize: 2,
+                        automaticLayout: true,
+                        bracketPairColorization: { enabled: true },
+                        formatOnPaste: true,
+                        suggest: { showKeywords: true },
+                      }}
+                    />
+                  )
                 )}
               </div>
             </div>
           )}
 
           {/* Preview */}
-          <div className={`flex flex-col ${previewFullscreen ? "flex-1" : "w-1/2"} overflow-hidden`}>
-            <div className="flex items-center gap-2 border-b border-[#2f363b] bg-[#1a1f23] px-3 py-2 text-xs text-[#c9d1cd]">
-              <span className="font-mono uppercase tracking-wider text-[10px]">Resultat</span>
-              {autoRefresh && (
-                <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-[#9dd0b5]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#9dd0b5]" /> en directe
-                </span>
-              )}
-              {isDirty && !autoRefresh && (
-                <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-yellow-400">
-                  <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" /> pendent
-                </span>
-              )}
-              <div className="ml-auto flex items-center gap-1">
-                <button className="rounded p-1 hover:bg-white/10" onClick={refresh} title="Actualitza">
-                  <RefreshCw size={13} />
-                </button>
-                <button className="rounded p-1 hover:bg-white/10" onClick={() => setPreviewFullscreen((v) => !v)}
-                  title={previewFullscreen ? "Redueix" : "Pantalla completa"}>
-                  {previewFullscreen ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-hidden">
-              <iframe
-                ref={iframeRef}
-                className="h-full w-full border-0 bg-white"
-                sandbox="allow-scripts allow-modals allow-forms allow-popups allow-same-origin"
-                srcDoc={previewDoc}
-                title="Vista prèvia del projecte"
-              />
-            </div>
-
-            {consoleMessages.length > 0 && (
-              <div className="max-h-28 overflow-y-auto border-t border-[#2f363b] bg-[#0d1117]">
-                <div className="flex items-center justify-between px-3 py-1">
-                  <span className="font-mono text-[10px] text-[#9aa3a0]">CONSOLA</span>
-                  <button className="text-[#9aa3a0] hover:text-white" onClick={() => setConsoleMessages([])}>
-                    <X size={11} />
+          {viewMode !== "editor" && (
+            <div className={`flex flex-col overflow-hidden ${
+              viewMode === "preview" ? "flex-1" : "w-1/2"
+            }`}>
+              <div className="flex items-center gap-2 border-b border-[#2f363b] bg-[#1a1f23] px-3 py-2 text-xs text-[#c9d1cd]">
+                <span className="font-mono uppercase tracking-wider text-[10px]">Resultat</span>
+                {autoRefresh && (
+                  <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-[#9dd0b5]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#9dd0b5]" /> en directe
+                  </span>
+                )}
+                {isDirty && !autoRefresh && (
+                  <span className="ml-1 inline-flex items-center gap-1 text-[10px] text-yellow-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-yellow-400" /> pendent
+                  </span>
+                )}
+                <div className="ml-auto flex items-center gap-1">
+                  {viewMode === "preview" && (
+                    <button
+                      className="flex items-center gap-1 rounded px-2 py-0.5 text-xs text-[#9aa3a0] hover:bg-white/10 hover:text-white mr-1"
+                      onClick={() => setViewMode("split")}
+                      title="Obre el codi dels fitxers"
+                    >
+                      <Code size={13} />
+                      <span className="hidden md:inline text-[11px]">Codi</span>
+                    </button>
+                  )}
+                  <button className="rounded p-1 hover:bg-white/10" onClick={refresh} title="Actualitza">
+                    <RefreshCw size={13} />
+                  </button>
+                  <button
+                    className="rounded p-1 hover:bg-white/10"
+                    onClick={() => setViewMode((v) => (v === "preview" ? "split" : "preview"))}
+                    title={viewMode === "preview" ? "Restaura la vista dividida" : "Maximitza la vista prèvia"}
+                  >
+                    {viewMode === "preview" ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                   </button>
                 </div>
-                {consoleMessages.map((msg, i) => (
-                  <div key={i} className={`flex gap-2 px-3 py-0.5 font-mono text-[11px] ${
-                    msg.level === "error" ? "text-red-400" : msg.level === "warn" ? "text-yellow-400" : "text-[#c9d1cd]"
-                  }`}>
-                    <span className="text-[#9aa3a0]">&gt;</span>
-                    <span>{msg.text}</span>
-                  </div>
-                ))}
               </div>
-            )}
-          </div>
+
+              <div className="flex-1 overflow-hidden">
+                <iframe
+                  ref={iframeRef}
+                  className="h-full w-full border-0 bg-white"
+                  sandbox="allow-scripts allow-modals allow-forms allow-popups allow-same-origin"
+                  srcDoc={previewDoc}
+                  title="Vista prèvia del projecte"
+                />
+              </div>
+
+              {consoleMessages.length > 0 && (
+                <div className="max-h-28 overflow-y-auto border-t border-[#2f363b] bg-[#0d1117]">
+                  <div className="flex items-center justify-between px-3 py-1">
+                    <span className="font-mono text-[10px] text-[#9aa3a0]">CONSOLA</span>
+                    <button className="text-[#9aa3a0] hover:text-white" onClick={() => setConsoleMessages([])}>
+                      <X size={11} />
+                    </button>
+                  </div>
+                  {consoleMessages.map((msg, i) => (
+                    <div key={i} className={`flex gap-2 px-3 py-0.5 font-mono text-[11px] ${
+                      msg.level === "error" ? "text-red-400" : msg.level === "warn" ? "text-yellow-400" : "text-[#c9d1cd]"
+                    }`}>
+                      <span className="text-[#9aa3a0]">&gt;</span>
+                      <span>{msg.text}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

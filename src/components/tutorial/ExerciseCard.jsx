@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Lightbulb, ExternalLink } from "lucide-react";
+import { openPlaygroundPopup } from "../../lib/openPlayground.js";
 
 export default function ExerciseCard({ exercise }) {
   const [showHint, setShowHint] = useState(false);
@@ -39,6 +40,12 @@ export default function ExerciseCard({ exercise }) {
         {exercise.playgroundFiles ? (
           <a
             href={`/playground?exercise=${encodeURIComponent(JSON.stringify(exercise.playgroundFiles))}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              openPlaygroundPopup(`/playground?exercise=${encodeURIComponent(JSON.stringify(exercise.playgroundFiles))}`);
+            }}
             className="inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
           >
             <ExternalLink size={13} />

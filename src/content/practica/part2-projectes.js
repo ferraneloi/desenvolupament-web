@@ -103,6 +103,78 @@ export default {
             <p>Apliquem CSS amb variables de disseny per als colors i mides, i fem servir <code>CSS Grid</code> per a la distribució de característiques que s'adapta automàticament a qualsevol amplada de pantalla.</p>
           `,
           lang: "css",
+          tabsOrder: "html-first",
+          defaultTab: "html",
+          htmlTitle: "index.html",
+          codeTitle: "styles.css",
+          previewHeight: "460px",
+          previewHtml: `<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AppFlow — La plataforma per a equips creatius</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="capcalera">
+    <div class="contenidor fila">
+      <a href="#" class="logo">App<span>Flow</span></a>
+      <nav aria-label="Navegació principal">
+        <ul class="nav-llista">
+          <li><a href="#caracteristiques">Característiques</a></li>
+          <li><a href="#preus">Preus</a></li>
+          <li><a href="#contacte" class="boto boto-primari">Comença de franc</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Secció HERO -->
+    <section class="hero">
+      <div class="contenidor">
+        <h1>Gestiona els teus projectes a la velocitat de la llum</h1>
+        <p class="subtitol">La solució integral per col·laborar en temps real, reduir reunions i lliurar projectes a temps.</p>
+        <div class="hero-accions">
+          <a href="#registre" class="boto boto-primari">Inicia prova gratuïta</a>
+          <a href="#demo" class="boto boto-secundari">Veure demostració</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Secció Característiques -->
+    <section id="caracteristiques" class="seccio">
+      <div class="contenidor">
+        <h2 class="titol-seccio">Tot el que necessites per créixer</h2>
+        <div class="graella-features">
+          <article class="targeta-feature">
+            <div class="icona" aria-hidden="true">⚡</div>
+            <h3>Ràpid i reactiu</h3>
+            <p>Sense temps de càrrega. Totes les accions es sincronitzen instantàniament entre tot l'equip.</p>
+          </article>
+          <article class="targeta-feature">
+            <div class="icona" aria-hidden="true">🔒</div>
+            <h3>Seguretat d'extrem a extrem</h3>
+            <p>Dades xifrades amb els estàndards més exigents del sector bancari.</p>
+          </article>
+          <article class="targeta-feature">
+            <div class="icona" aria-hidden="true">📊</div>
+            <h3>Analítica avançada</h3>
+            <p>Informes visuals per mesurar la productivitat i prendre millors decisions.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="peu">
+    <div class="contenidor">
+      <p>&copy; 2026 AppFlow Technologies. Tots els drets reservats.</p>
+    </div>
+  </footer>
+</body>
+</html>`,
           code: `:root {
   --color-primari: #2563eb;
   --color-primari-fosc: #1d4ed8;
@@ -288,6 +360,11 @@ body {
             <p>Un bon portafolis permet filtrar els projectes segons la tecnologia (per exemple: <em>Tots</em>, <em>HTML/CSS</em>, <em>JavaScript</em>, <em>APIs</em>). Farem servir atributs <code>data-categoria</code> a cada targeta per filtrar de manera instantània.</p>
           `,
           lang: "html",
+          tabsOrder: "html-first",
+          defaultTab: "html",
+          codeTitle: "index.html",
+          cssTitle: "styles.css",
+          previewHeight: "440px",
           code: `<div class="filtres">
   <button class="boto-filtre actiu" data-filtre="tots">Tots</button>
   <button class="boto-filtre" data-filtre="html-css">HTML & CSS</button>
@@ -338,7 +415,96 @@ body {
     });
   });
 </script>`,
-          codeTitle: "filtre-projectes.html",
+          cssCode: `/* Botons de filtre */
+.filtres {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.boto-filtre {
+  padding: 8px 18px;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.boto-filtre:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.boto-filtre.actiu {
+  background-color: #2563eb;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+/* Graella de projectes */
+.graella-projectes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+/* Targeta de projecte */
+.targeta-projecte {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.targeta-projecte:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.targeta-projecte h3 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.targeta-projecte p {
+  margin: 0 0 16px 0;
+  font-size: 13.5px;
+  color: #64748b;
+  line-height: 1.5;
+  flex-grow: 1;
+}
+
+/* Etiqueta / Pill */
+.etiqueta {
+  align-self: flex-start;
+  padding: 4px 10px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.targeta-projecte[data-categoria="javascript"] .etiqueta {
+  background-color: #fefce8;
+  color: #ca8a04;
+}
+
+.targeta-projecte[data-categoria="api"] .etiqueta {
+  background-color: #ecfdf5;
+  color: #059669;
+}`,
         },
         {
           title: "Commutador de mode clar i fosc (Dark Mode)",
