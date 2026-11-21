@@ -79,6 +79,7 @@ const DEFAULT_PROJECT = {
   name: "El meu projecte",
   files: DEFAULT_FILES,
   activeFile: "index.html",
+  openTabs: ["index.html", "styles.css", "script.js"],
   folders: [],
 };
 
@@ -225,13 +226,20 @@ function readProjects() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return JSON.parse(raw).map((p) => ({
-        ...p,
-        folders: p.folders || [],
-        files: Object.fromEntries(
-          Object.entries(p.files || {}).map(([k, f]) => [k, { ...f, path: f.path || k }])
-        ),
-      }));
+      return JSON.parse(raw).map((p) => {
+        const fileKeys = Object.keys(p.files || {});
+        const openTabs = Array.isArray(p.openTabs)
+          ? p.openTabs.filter((t) => p.files?.[t])
+          : (fileKeys.length ? [p.activeFile && p.files?.[p.activeFile] ? p.activeFile : fileKeys[0]] : []);
+        return {
+          ...p,
+          folders: p.folders || [],
+          openTabs,
+          files: Object.fromEntries(
+            Object.entries(p.files || {}).map(([k, f]) => [k, { ...f, path: f.path || k }])
+          ),
+        };
+      });
     }
   } catch {}
   return [DEFAULT_PROJECT];
@@ -377,6 +385,7 @@ function FileTreeNode({
           <div
             key={file.path}
             draggable
+            title={file.path}
             className={`group flex cursor-grab items-center gap-1.5 px-3 py-0.5 transition-colors ${
               activeFile === file.path ? "bg-[#2c3339] text-white" :
               isDropTarget ? "bg-blue-500/20 outline outline-1 outline-blue-400/50" :
@@ -475,17 +484,26 @@ export default function VSCodePlayground({ initialFiles = null }) {
   const folderInputRef = useRef(null);
 
   const project     = projects.find((p) => p.id === activeProjectId) || projects[0];
-  const activeFile  = project?.activeFile || "index.html";
   const files       = project?.files || DEFAULT_FILES;
   const folders     = project?.folders || [];
-  const currentFile = files[activeFile];
+  const openTabs    = project?.openTabs || (Object.keys(files).length ? [Object.keys(files)[0]] : []);
+  const activeFile  = project?.activeFile !== undefined ? project.activeFile : (openTabs.length ? openTabs[0] : null);
+  const currentFile = activeFile ? files[activeFile] : null;
 
   // ── Load tutorial files
   useEffect(() => {
     if (!initialFiles) return;
     setProjects((prev) => {
       const idx = prev.findIndex((p) => p.id === "tutorial");
-      const tpl = { id: "tutorial", name: "Tutorial", files: initialFiles, activeFile: Object.keys(initialFiles)[0], folders: [] };
+      const fileKeys = Object.keys(initialFiles);
+      const tpl = {
+        id: "tutorial",
+        name: "Tutorial",
+        files: initialFiles,
+        activeFile: fileKeys[0] || null,
+        openTabs: fileKeys.slice(0, 4),
+        folders: [],
+      };
       if (idx >= 0) return prev.map((p) => (p.id === "tutorial" ? tpl : p));
       return [tpl, ...prev];
     });
@@ -535,9 +553,41 @@ export default function VSCodePlayground({ initialFiles = null }) {
     );
   }
 
-  function setActiveFile(path) {
+  function openFile(path) {
+    if (!files[path]) return;
     setProjects((prev) =>
-      prev.map((p) => (p.id === activeProjectId ? { ...p, activeFile: path } : p))
+      prev.map((p) => {
+        if (p.id !== activeProjectId) return p;
+        const currentTabs = p.openTabs || [];
+        const nextTabs = currentTabs.includes(path) ? currentTabs : [...currentTabs, path];
+        return { ...p, openTabs: nextTabs, activeFile: path };
+      })
+    );
+  }
+
+  function closeTab(path, e) {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    setProjects((prev) =>
+      prev.map((p) => {
+        if (p.id !== activeProjectId) return p;
+        const currentTabs = p.openTabs || [];
+        const tabIndex = currentTabs.indexOf(path);
+        const nextTabs = currentTabs.filter((t) => t !== path);
+
+        let nextActive = p.activeFile;
+        if (p.activeFile === path) {
+          if (nextTabs.length > 0) {
+            const newIndex = Math.min(Math.max(0, tabIndex), nextTabs.length - 1);
+            nextActive = nextTabs[newIndex];
+          } else {
+            nextActive = null;
+          }
+        }
+        return { ...p, openTabs: nextTabs, activeFile: nextActive };
+      })
     );
   }
 
@@ -569,14 +619,16 @@ export default function VSCodePlayground({ initialFiles = null }) {
         : language === "javascript" ? "// Codi JavaScript\n"
         : "";
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id !== activeProjectId ? p :
-          {
+        prev.map((p) => {
+          if (p.id !== activeProjectId) return p;
+          const nextTabs = (p.openTabs || []).includes(path) ? p.openTabs : [...(p.openTabs || []), path];
+          return {
             ...p,
             files: { ...p.files, [path]: { name: basename(path), path, language, content } },
+            openTabs: nextTabs,
             activeFile: path,
-          }
-        )
+          };
+        })
       );
     }
     setNewItemName("");
@@ -590,8 +642,9 @@ export default function VSCodePlayground({ initialFiles = null }) {
         if (p.id !== activeProjectId) return p;
         const newFiles = { ...p.files };
         delete newFiles[path];
-        const newActive = p.activeFile === path ? Object.keys(newFiles)[0] : p.activeFile;
-        return { ...p, files: newFiles, activeFile: newActive };
+        const nextTabs = (p.openTabs || []).filter((t) => t !== path);
+        const nextActive = p.activeFile === path ? (nextTabs[0] || Object.keys(newFiles)[0] || null) : p.activeFile;
+        return { ...p, files: newFiles, openTabs: nextTabs, activeFile: nextActive };
       })
     );
   }
@@ -607,8 +660,9 @@ export default function VSCodePlayground({ initialFiles = null }) {
         for (const [k, v] of Object.entries(p.files)) {
           if (!k.startsWith(folderPath + "/")) newFiles[k] = v;
         }
-        const newActive = newFiles[p.activeFile] ? p.activeFile : Object.keys(newFiles)[0] || "";
-        return { ...p, folders: newFolders, files: newFiles, activeFile: newActive };
+        const nextTabs = (p.openTabs || []).filter((t) => !t.startsWith(folderPath + "/"));
+        const newActive = newFiles[p.activeFile] ? p.activeFile : (nextTabs[0] || Object.keys(newFiles)[0] || null);
+        return { ...p, folders: newFolders, files: newFiles, openTabs: nextTabs, activeFile: newActive };
       })
     );
   }
@@ -628,7 +682,8 @@ export default function VSCodePlayground({ initialFiles = null }) {
             newFiles[k] = v;
           }
         }
-        return { ...p, files: newFiles, activeFile: p.activeFile === oldPath ? newPath : p.activeFile };
+        const nextTabs = (p.openTabs || []).map((t) => (t === oldPath ? newPath : t));
+        return { ...p, files: newFiles, openTabs: nextTabs, activeFile: p.activeFile === oldPath ? newPath : p.activeFile };
       })
     );
     setRenaming(null);
@@ -637,7 +692,14 @@ export default function VSCodePlayground({ initialFiles = null }) {
   // ─── Project mutations ───────────────────────────────────────
   function newProject() {
     const id = `project-${Date.now()}`;
-    const p = { id, name: "Projecte nou", files: { ...DEFAULT_FILES }, activeFile: "index.html", folders: [] };
+    const p = {
+      id,
+      name: "Projecte nou",
+      files: { ...DEFAULT_FILES },
+      activeFile: "index.html",
+      openTabs: ["index.html", "styles.css", "script.js"],
+      folders: [],
+    };
     setProjects((prev) => [...prev, p]);
     setActiveProjectId(id);
   }
@@ -645,7 +707,14 @@ export default function VSCodePlayground({ initialFiles = null }) {
   function resetProject() {
     setProjects((prev) =>
       prev.map((p) =>
-        p.id === activeProjectId ? { ...DEFAULT_PROJECT, id: activeProjectId, name: p.name } : p
+        p.id === activeProjectId
+          ? {
+              ...DEFAULT_PROJECT,
+              id: activeProjectId,
+              name: p.name,
+              openTabs: ["index.html", "styles.css", "script.js"],
+            }
+          : p
       )
     );
   }
@@ -684,9 +753,14 @@ export default function VSCodePlayground({ initialFiles = null }) {
     }
     const rootName = inputFiles[0].webkitRelativePath?.split("/")[0] || "Carpeta carregada";
     const id = `project-${Date.now()}`;
+    const addedKeys = Object.keys(newFiles);
+    const initialTabs = newFiles["index.html"]
+      ? ["index.html", ...addedKeys.filter((k) => k !== "index.html").slice(0, 3)]
+      : addedKeys.slice(0, 4);
     const p  = {
       id, name: rootName, files: newFiles,
       activeFile: newFiles["index.html"] ? "index.html" : Object.keys(newFiles)[0],
+      openTabs: initialTabs,
       folders: [...newFolders],
     };
     setProjects((prev) => [...prev, p]);
@@ -802,10 +876,17 @@ export default function VSCodePlayground({ initialFiles = null }) {
         }
         const updatedFolders = [...new Set([...(p.folders || []), ...parentFolders])];
 
+        const addedKeys = Object.keys(newEntries);
+        const nextTabs = [...(p.openTabs || [])];
+        for (const ak of addedKeys) {
+          if (!nextTabs.includes(ak)) nextTabs.push(ak);
+        }
+
         return {
           ...p,
           files: updatedFiles,
           folders: updatedFolders,
+          openTabs: nextTabs,
           activeFile: lastActive || p.activeFile,
         };
       })
@@ -865,7 +946,8 @@ export default function VSCodePlayground({ initialFiles = null }) {
         const parts = newPath.split("/");
         for (let i = 1; i < parts.length; i++) parentFolders.push(parts.slice(0, i).join("/"));
         const newFolders = [...new Set([...(p.folders || []), ...parentFolders])];
-        return { ...p, files: newFiles, activeFile: newActive, folders: newFolders };
+        const nextTabs = (p.openTabs || []).map((t) => (t === oldPath ? newPath : t));
+        return { ...p, files: newFiles, activeFile: newActive, folders: newFolders, openTabs: nextTabs };
       })
     );
   }
@@ -913,7 +995,14 @@ export default function VSCodePlayground({ initialFiles = null }) {
           ? normPath(newFolderPath + p.activeFile.slice(oldFolderPath.length))
           : p.activeFile;
 
-        return { ...p, files: newFiles, folders: newFoldersList, activeFile: newActive };
+        const nextTabs = (p.openTabs || []).map((t) => {
+          if (t === oldFolderPath || t.startsWith(oldFolderPath + "/")) {
+            return normPath(newFolderPath + t.slice(oldFolderPath.length));
+          }
+          return t;
+        });
+
+        return { ...p, files: newFiles, folders: newFoldersList, activeFile: newActive, openTabs: nextTabs };
       })
     );
   }
@@ -1067,7 +1156,7 @@ export default function VSCodePlayground({ initialFiles = null }) {
                 node={tree}
                 prefix=""
                 activeFile={activeFile}
-                onSelect={setActiveFile}
+                onSelect={openFile}
                 onRename={(path) => { setRenaming(path); setRenameValue(basename(path)); }}
                 onDelete={deleteFile}
                 renaming={renaming}
@@ -1119,20 +1208,37 @@ export default function VSCodePlayground({ initialFiles = null }) {
               {/* Tabs + Actions */}
               <div className="flex items-center justify-between border-b border-[#2f363b] bg-[#1a1f23]">
                 <div className="flex overflow-x-auto">
-                  {Object.values(files).map((file) => (
-                    <button
-                      key={file.path}
-                      className={`flex shrink-0 items-center gap-1.5 border-r border-[#2f363b] px-3 py-2 font-mono text-xs transition-colors ${
-                        activeFile === file.path
-                          ? "bg-[#1e1e1e] text-white"
-                          : "text-[#9aa3a0] hover:bg-[#2c3339] hover:text-white"
-                      }`}
-                      onClick={() => setActiveFile(file.path)}
-                    >
-                      {getFileIcon(file.name)}
-                      {file.name}
-                    </button>
-                  ))}
+                  {openTabs.map((path) => {
+                    const file = files[path];
+                    if (!file) return null;
+                    const isActive = activeFile === path;
+                    const tooltipText = project?.name ? `${project.name} • ${file.path}` : file.path;
+                    return (
+                      <div
+                        key={path}
+                        className={`group flex shrink-0 cursor-pointer items-center gap-1.5 border-r border-[#2f363b] px-3 py-2 font-mono text-xs transition-colors ${
+                          isActive
+                            ? "bg-[#1e1e1e] text-white"
+                            : "text-[#9aa3a0] hover:bg-[#2c3339] hover:text-white"
+                        }`}
+                        onClick={() => openFile(path)}
+                        title={tooltipText}
+                      >
+                        {getFileIcon(file.name)}
+                        <span className="truncate max-w-[130px]">{file.name}</span>
+                        <button
+                          type="button"
+                          className={`rounded p-0.5 transition-colors hover:bg-white/20 hover:text-white ${
+                            isActive ? "opacity-70 group-hover:opacity-100" : "opacity-0 group-hover:opacity-70"
+                          }`}
+                          onClick={(e) => closeTab(path, e)}
+                          title="Tanca pestanya"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* Editor actions: Maximitzar / Restaurar / Obrir preview */}
                 <div className="flex items-center gap-1 px-2 shrink-0">
@@ -1158,8 +1264,17 @@ export default function VSCodePlayground({ initialFiles = null }) {
 
               {/* Monaco o Visualitzador Multimèdia */}
               <div className="flex-1 overflow-auto bg-[#1e1e1e]">
-                {currentFile && (
-                  currentFile.isBinary ? (
+                {!currentFile ? (
+                  <div className="flex h-full flex-col items-center justify-center p-6 text-center text-[#9aa3a0]">
+                    <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#2c3339]/60 text-[#c9d1cd] mb-3">
+                      <FileCode size={32} />
+                    </div>
+                    <p className="font-mono text-sm text-[#c9d1cd]">Cap fitxer obert</p>
+                    <p className="text-xs text-[#64748b] mt-1 max-w-xs">
+                      Selecciona un fitxer a l'explorador de l'esquerra per visualitzar-lo o editar-lo.
+                    </p>
+                  </div>
+                ) : currentFile.isBinary ? (
                     <div className="flex h-full flex-col items-center justify-center p-6 text-center text-[#c9d1cd]">
                       {/\.(png|jpg|jpeg|gif|webp|svg|ico|bmp|avif)$/i.test(currentFile.name) ? (
                         <div className="flex flex-col items-center gap-4 max-w-lg">
@@ -1224,8 +1339,7 @@ export default function VSCodePlayground({ initialFiles = null }) {
                         suggest: { showKeywords: true },
                       }}
                     />
-                  )
-                )}
+                  )}
               </div>
             </div>
           )}
