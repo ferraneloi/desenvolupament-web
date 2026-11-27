@@ -42,7 +42,7 @@ export default {
             <p>Les mides es controlen amb <code>width</code>, <code>height</code> o CSS. Sempre cal donar una alçada concreta.</p>
           `,
           code: `<iframe
-  src="https://www.openstreetmap.org/export/embed.html?bbox=2.10%2C41.36%2C2.24%2C41.42&amp;layer=mapnik"
+  src="https://maps.google.com/maps?q=Barcelona&z=13&output=embed"
   title="Mapa de Barcelona"
   width="100%" height="320"
   style="border: 1px solid #e2dbcd; border-radius: 12px;"

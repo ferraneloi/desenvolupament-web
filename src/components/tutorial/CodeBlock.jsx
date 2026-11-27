@@ -142,7 +142,7 @@ export default function CodeBlock({
   previewHtml,
   cssCode,
   cssTitle,
-  tabsOrder = "css-first",
+  tabsOrder = "html-first",
   defaultTab,
   htmlTitle,
   previewHeight,
