@@ -121,6 +121,7 @@ export default {
   border-radius: 999px;
 }`,
           previewHtml: `<div class="targeta"><span class="etiqueta">NOU</span><p style="margin:0">Una targeta amb una etiqueta posicionada.</p></div>`,
+          note: "La propietat moderna <code>inset</code> és una drecera per a <code>top</code>, <code>right</code>, <code>bottom</code> i <code>left</code> alhora. Per exemple, <code>inset: 0</code> fa que un element <code>absolute</code> o <code>fixed</code> cobreixi tot el seu contenidor.",
         },
         {
           title: "Sticky i capçaleres",
@@ -215,10 +216,10 @@ export default {
           previewHtml: `<img class="imatge" src="/images/picsum-1015-320x200.jpg" alt="Riu de muntanya" style="border-radius:10px;max-width:100%">`,
         },
         {
-          title: "Ombres, filtres i accessibilitat",
+          title: "Ombres, filtres i fusió",
           body: `
-            <p><code>box-shadow</code> crea profunditat i <code>filter</code> aplica efectes com desenfocar, aclarir o passar a escala de grisos. Tots dos són barats si no abusen.</p>
-            <p>Algunes persones pateixen marejos amb el moviment: embolcalla sempre les animacions en una consulta de preferència.</p>
+            <p><code>box-shadow</code> crea profunditat al voltant d'una caixa, mentre que <code>filter: drop-shadow()</code> projecta l'ombra seguint la silueta real d'una imatge transparent o d'un SVG.</p>
+            <p>Amb <code>filter</code> també pots desenfocar, aclarir o passar a escala de grisos, i amb <code>mix-blend-mode</code> pots fusionar els colors d'un element amb el fons. Embolcalla sempre les animacions en <code>prefers-reduced-motion</code>.</p>
           `,
           lang: "css",
           code: `.targeta {
@@ -228,13 +229,43 @@ export default {
   box-shadow: 0 12px 28px rgb(60 40 20 / 0.12);
 }
 
+.icona-svg { filter: drop-shadow(0 4px 6px rgb(0 0 0 / 0.25)); }
+
 .targeta img { filter: grayscale(1); transition: filter 200ms ease; }
 .targeta:hover img { filter: none; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
 }`,
-          previewHtml: `<div class="targeta"><img src="/images/picsum-1025-320x160.jpg" alt="Gos" style="max-width:100%;border-radius:8px"><p style="margin:10px 0 0">Pasa el ratolí per veure el color.</p></div>`,
+          previewHtml: `<div class="targeta"><img src="/images/picsum-1025-320x160.jpg" alt="Gos" style="max-width:100%;border-radius:8px"><p style="margin:10px 0 0">Passa el ratolí per veure el color.</p></div>`,
+        },
+        {
+          title: "Transformacions 3D i perspectiva",
+          body: `
+            <p>A més dels eixos X i Y, CSS permet treballar en profunditat amb l'eix <strong>Z</strong>. Perquè l'efecte de profunditat sigui visible, el contenidor pare ha de definir <code>perspective</code> (la distància de l'observador).</p>
+            <ul>
+              <li><code>perspective: 600px</code> ➜ defineix la profunditat de l'escena al pare.</li>
+              <li><code>rotateX(deg)</code> i <code>rotateY(deg)</code> ➜ giren l'element en tres dimensions.</li>
+              <li><code>translateZ(px)</code> / <code>translate3d(x, y, z)</code> ➜ apropen o allunyen l'element.</li>
+            </ul>
+          `,
+          lang: "css",
+          code: `.escena {
+  perspective: 600px;
+}
+
+.targeta-3d {
+  background: #1f7a5c;
+  color: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  transition: transform 300ms ease;
+}
+
+.escena:hover .targeta-3d {
+  transform: rotateY(14deg) rotateX(6deg) translateZ(10px);
+}`,
+          previewHtml: `<div class="escena"><div class="targeta-3d">Passa el ratolí per girar en 3D</div></div>`,
         },
       ],
       exercise: {
@@ -397,6 +428,7 @@ li:nth-child(3n) { color: #1f7a5c; }
   color: #b85c3a;
 }`,
           previewHtml: `<blockquote class="cita" style="margin:0">Aprendre CSS és aprendre a mirar.</blockquote>`,
+          note: "També existeix <code>::file-selector-button</code>, un pseudo-element molt útil per estilitzar el botó «Escull fitxer» d'un <code>&lt;input type=\"file\"&gt;</code> sense JavaScript.",
         },
       ],
       exercise: {

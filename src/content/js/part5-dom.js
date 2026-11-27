@@ -163,6 +163,28 @@ export default {
   });
 </script>`,
         },
+        {
+          title: "Clonar elements i parsejar HTML",
+          body: `
+            <p>Quan necessites repetir una estructura HTML existent, <code>element.cloneNode(true)</code> crea una còpia profunda amb tots els fills (passant <code>false</code> només copia l'etiqueta).</p>
+            <p>I si reps text HTML d'una font fiable i el vols convertir en nodes manipulables sense usar <code>innerHTML</code> directament, pots fer servir <code>DOMParser</code> o <code>insertAdjacentHTML()</code>.</p>
+          `,
+          lang: "html",
+          code: `<div id="origen" class="targeta"><strong>Plantilla</strong></div>
+<div id="desti"></div>
+
+<script>
+  const origen = document.getElementById("origen");
+  const copia = origen.cloneNode(true);
+  copia.querySelector("strong").textContent = "Còpia clonada";
+  document.getElementById("desti").append(copia);
+
+  // Parsejar un fragment de text HTML a DOM real
+  const parser = new DOMParser();
+  const doc = parser.parseFromString("<p>Paràgraf <em>parsejat</em></p>", "text/html");
+  document.getElementById("desti").append(doc.body.firstElementChild);
+</script>`,
+        },
       ],
       exercise: {
         brief:

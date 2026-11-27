@@ -258,6 +258,8 @@ export default {
               <li><code>lang</code> i <code>dir</code> ➜ idioma i direcció del text (<code>ltr</code>, <code>rtl</code>).</li>
               <li><code>data-*</code> ➜ dades pròpies que inventes tu, per exemple <code>data-preu="12"</code>.</li>
               <li><code>tabindex</code> ➜ ordre de navegació amb el teclat.</li>
+              <li><code>contenteditable</code> ➜ permet que l'usuari editi directament el text de l'element al navegador.</li>
+              <li><code>inert</code> ➜ desactiva interaccions i lectura per a lectors de pantalla dins d'un bloc (ideal darrere d'un diàleg modal).</li>
             </ul>
           `,
           code: `<h2 id="seccio-1" class="titol destacat" lang="ca">Identificadors i classes</h2>

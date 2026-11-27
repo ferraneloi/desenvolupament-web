@@ -72,6 +72,44 @@ img { max-width: 100%; height: auto; }
   <div class="fitxa"><img src="/images/picsum-1043-240x160.jpg" alt="Bosc" style="border-radius:8px;max-width:100%"><p style="margin:0">La imatge i el text es col·loquen en dues columnes quan hi ha espai.</p></div>
 </div>`,
         },
+        {
+          title: "CSS defensiu i detecció tàctil",
+          body: `
+            <p>El <strong>CSS defensiu</strong> consisteix a escriure regles que protegeixin el disseny quan arriba contingut inesperat (títols molt llargs, imatges de mides rares o pantalles tàctils):</p>
+            <ul>
+              <li><code>overflow-wrap: break-word</code> ➜ evita que una paraula o URL llarga desbordi el contenidor.</li>
+              <li><code>flex-wrap: wrap</code> ➜ permet que els elements d'una fila Flex baixin de línia si no hi caben.</li>
+              <li><code>@media (hover: hover)</code> ➜ aplica efectes <code>:hover</code> només en dispositius amb ratolí, evitant que els botons quedin «enganxats» en estat hover al mòbil després de tocar-los.</li>
+            </ul>
+          `,
+          lang: "css",
+          code: `.targeta-segura {
+  overflow-wrap: break-word;
+}
+
+.botons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boto-accio {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #b85c3a;
+  background: transparent;
+  color: #b85c3a;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+@media (hover: hover) {
+  .boto-accio:hover {
+    background: #b85c3a;
+    color: #fff;
+  }
+}`,
+          previewHtml: `<div class="botons"><button class="boto-accio">Desar</button><button class="boto-accio">Compartir</button></div>`,
+        },
       ],
       exercise: {
         brief:

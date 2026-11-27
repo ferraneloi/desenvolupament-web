@@ -271,6 +271,70 @@ creaUsuari({ name: "Ada", email: "ada@escola.cat" })
       },
     },
     {
+      slug: "temps-real",
+      title: "Comunicació en temps real: WebSockets i SSE",
+      summary:
+        "Quan no n'hi ha prou amb demanar dades amb <code>fetch</code>: connexions persistents amb <code>EventSource</code> i <code>WebSocket</code>.",
+      goals: [
+        "Entendre la diferència entre peticions HTTP puntuals i connexions en temps real.",
+        "Rebre actualitzacions del servidor amb Server-Sent Events (<code>EventSource</code>).",
+        "Obrir una connexió bidireccional amb <code>WebSocket</code>.",
+      ],
+      sections: [
+        {
+          title: "Server-Sent Events (SSE) amb EventSource",
+          body: `
+            <p>Amb <code>fetch</code> és el client qui sempre inicia la conversa. Amb <strong>Server-Sent Events (SSE)</strong>, el servidor manté oberta una connexió HTTP i envia esdeveniments al navegador cada vegada que hi ha novetats (per exemple, un comptador en directe, notificacions o cotitzacions).</p>
+            <p>La informació viatja en una sola direcció (servidor ➜ client) i l'API nativa del navegador és <code>EventSource</code>, que fins i tot es reconnecta sola si cau la xarxa.</p>
+          `,
+          lang: "js",
+          code: `const font = new EventSource("https://exemple.cat/api/esdeveniments");
+
+font.addEventListener("message", (event) => {
+  console.log("Dada rebuda del servidor:", event.data);
+});
+
+font.addEventListener("error", () => {
+  console.log("S'ha perdut la connexió SSE (reintentant...)");
+});
+
+// Quan ja no calgui escoltar més:
+// font.close();`,
+        },
+        {
+          title: "WebSockets: comunicació bidireccional",
+          body: `
+            <p>A diferència de SSE, <strong>WebSocket</strong> (<code>ws://</code> o <code>wss://</code>) obre un canal permanent i <strong>bidireccional</strong>: tant el servidor com el client poden enviar missatges en qualsevol moment.</p>
+            <p>És la tecnologia ideal per a xats en temps real, edició col·laborativa o jocs multijugador.</p>
+          `,
+          lang: "js",
+          code: `const socket = new WebSocket("wss://echo.websocket.events");
+
+socket.addEventListener("open", () => {
+  console.log("Connexió WebSocket oberta");
+  socket.send(JSON.stringify({ usuari: "Ada", missatge: "Hola a tothom!" }));
+});
+
+socket.addEventListener("message", (event) => {
+  console.log("Missatge rebut:", event.data);
+});
+
+socket.addEventListener("error", (err) => {
+  console.error("Error al WebSocket:", err);
+});
+
+socket.addEventListener("close", () => {
+  console.log("Connexió tancada");
+});`,
+        },
+      ],
+      exercise: {
+        brief:
+          "Explica en quins casos escolliries <code>fetch</code>, quan <code>EventSource</code> (SSE) i quan <code>WebSocket</code>, i escriu el client mínim per subscriure's a un canal de notificacions.",
+        hint: "Pensa en si el client només escolta (SSE), si només demana un cop (<code>fetch</code>) o si envia i rep contínuament (<code>WebSocket</code>).",
+      },
+    },
+    {
       slug: "oop-basics",
       title: "Bases de la programació orientada a objectes",
       summary:

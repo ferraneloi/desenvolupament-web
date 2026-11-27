@@ -70,6 +70,37 @@ p + p { margin-top: 40px; } /* l'espai real entre els dos és 40px, no 64px */
 }`,
           previewHtml: `<div class="centrat"><p>Primer paràgraf.</p><p>Segon paràgraf, amb menys espai del que sembla.</p></div>`,
         },
+        {
+          title: "Desbordament (overflow) i text llarg",
+          body: `
+            <p>Quan el contingut és més gran que la caixa que el conté, la propietat <code>overflow</code> decideix què passa:</p>
+            <ul>
+              <li><code>visible</code> (per defecte) ➜ el contingut surt fora de la caixa.</li>
+              <li><code>hidden</code> ➜ retalla tot el que sobra.</li>
+              <li><code>auto</code> ➜ només mostra barres de desplaçament quan fan falta.</li>
+              <li><code>overflow-x</code> / <code>overflow-y</code> ➜ controlen només l'eix horitzontal o vertical.</li>
+            </ul>
+            <p>Per truncar una línia amb punts suspensius (<code>...</code>), combina <code>overflow: hidden</code>, <code>white-space: nowrap</code> i <code>text-overflow: ellipsis</code>. I per evitar que una URL llarga trenqui el disseny, fes servir <code>overflow-wrap: break-word</code>.</p>
+          `,
+          lang: "css",
+          code: `.caixa-scroll {
+  height: 76px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #d9d3c8;
+  border-radius: 8px;
+}
+
+.truncat {
+  max-width: 240px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}`,
+          previewHtml: `<p class="truncat">Aquest títol és massa llarg i es talla amb punts suspensius</p>
+<div class="caixa-scroll">Contingut amb diverses línies.<br>Si supera l'alçada, apareix scroll vertical.<br>Línia 3.<br>Línia 4.</div>`,
+        },
       ],
       exercise: {
         brief:
